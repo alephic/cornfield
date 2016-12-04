@@ -1,39 +1,60 @@
 
 import asyncio
 import websockets.server
+from concurrent.futures import CancelledError
 
-connections = set()
+class Broadcast:
+  def __init__(self):
+    self.waiting = 0
+    self.event = asyncio.Event()
+    self.val = None
+  def send(self, val):
+    self.val = val
+    self.event.set()
+  async def recv(self):
+    try:
+      self.waiting += 1
+      await self.event.wait()
+      self.waiting -= 1
+      if self.waiting == 0:
+        self.event.clear()
+      return self.val
+    except CancelledError:
+      self.waiting -= 1
+      if self.waiting == 0:
+        self.event.clear()
 
-async def producer():
-  while True:
-    continue
+#CONNS = set()
+NUM_CONNS = 0
+TO_ALL_CONNS = Broadcast()
 
-async def consumer(msg):
-  pass
+async def onRecv(text, conn_id):
+  TO_ALL_CONNS.send(lambda cid: text)
 
-async def handler(ws, path):
-  connections.add(ws)
+async def handler(websocket, path):
+  conn_id = NUM_CONNS
+  NUM_CONNS += 1
+  #CONNS.add(ws)
   try:
     while True:
-      listener_task = asyncio.ensure_future(ws.recv())
-      #TODO replace producer()
-      producer_task = asyncio.ensure_future(producer())
+      ws_listen_task = asyncio.ensure_future(websocket.recv())
+      bc_listen_task = asyncio.ensure_future(TO_ALL_CONNS.recv())
       done, pending = await asyncio.wait(
-        [listener_task, producer_task],
+        [ws_listen_task, bc_listen_task],
         return_when=asyncio.FIRST_COMPLETED)
-      if listener_task in done:
-        msg = listener_task.result()
-        await consumer(msg)
-        #TODO replace consumer(msg)
+      if ws_listen_task in done:
+        text = ws_listen_task.result()
+        await onRecv(text, conn_id)
       else:
-        listener_task.cancel()
-      if producer_task in done:
-        msg = producer_task.result()
-        await ws.send(msg)
+        ws_listen_task.cancel()
+      if bc_listen_task in done:
+        get_text = bc_listen_task.result()
+        await websocket.send(get_text(conn_id))
       else:
-        producer_task.cancel()
+        bc_listen_task.cancel()
   finally:
-    connections.remove(ws)
+    #CONNS.remove(ws)
+    pass
 
 start_serv = websockets.server.serve(handler, port=8765)
 asyncio.get_event_loop().run_until_complete(start_serv)
