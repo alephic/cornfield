@@ -1,8 +1,15 @@
 
 import asyncio
-import websockets
+import websockets.server
 
 connections = set()
+
+async def producer():
+  while True:
+    continue
+
+async def consumer(msg):
+  pass
 
 async def handler(ws, path):
   connections.add(ws)
@@ -28,6 +35,6 @@ async def handler(ws, path):
   finally:
     connections.remove(ws)
 
-start_serv = websockets.serve(hello, 'localhost', 8765)
+start_serv = websockets.server.serve(handler, port=8765)
 asyncio.get_event_loop().run_until_complete(start_serv)
 asyncio.get_event_loop().run_forever()
