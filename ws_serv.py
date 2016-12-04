@@ -2,6 +2,7 @@
 
 import asyncio
 import websockets.server
+from websockets.exceptions import ConnectionClosed
 from concurrent.futures import CancelledError
 
 class Broadcast:
@@ -30,12 +31,15 @@ NUM_CONNS = 0
 TO_ALL_CONNS = Broadcast()
 
 async def onRecv(text, conn_id):
+  global TO_ALL_CONNS
   TO_ALL_CONNS.send(lambda cid: text)
 
 async def handler(websocket, path):
+  global NUM_CONNS
+  global TO_ALL_CONNS
   conn_id = NUM_CONNS
   NUM_CONNS += 1
-  #CONNS.add(ws)
+  #CONNS.add(websocket)
   try:
     while True:
       ws_listen_task = asyncio.ensure_future(websocket.recv())
@@ -53,8 +57,10 @@ async def handler(websocket, path):
         await websocket.send(get_text(conn_id))
       else:
         bc_listen_task.cancel()
+  except ConnectionClosed:
+    pass
   finally:
-    #CONNS.remove(ws)
+    #CONNS.remove(websocket)
     pass
 
 start_serv = websockets.server.serve(handler, port=8765)
