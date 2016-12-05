@@ -28,4 +28,7 @@ window.addEventListener('load', function(e) {
     }
   });
   document.getElementById('prompt').focus();
+  window.addEventListener('click', function(e) {
+    document.getElementById('prompt').focus();
+  })
 });
