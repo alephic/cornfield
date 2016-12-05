@@ -4,7 +4,7 @@ from concurrent.futures import CancelledError
 class Channel:
   def __init__(self, loop=None):
     self.event = asyncio.Event(loop=loop)
-    self.vals = None
+    self.vals = []
   def send(self, val):
     self.vals.append(val)
     self.event.set()
