@@ -35,13 +35,13 @@ async def handler(websocket, path):
       if bc_listen_task in done:
         get_text = bc_listen_task.result()
         text = get_text(conn_id)
-        print('Sending to conn #'+str(conn_id)+': "'+text+'"')
         await websocket.send(text)
       else:
         bc_listen_task.cancel()
   except ConnectionClosed:
     pass
   finally:
+    print('Closing connection #'+str(conn_id))
     TO_ALL_CONNS.unsubscribe(from_all)
     pass
 
