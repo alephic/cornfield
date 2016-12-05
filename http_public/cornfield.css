@@ -1,7 +1,12 @@
-
-body {
+body, input {
   background-color: black;
   color: white;
   font-size: 14pt;
   font-family: monospace;
+}
+input {
+  border-style: none;
+}
+input:focus {
+  outline: none;
 }
