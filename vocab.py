@@ -37,7 +37,11 @@ adjs = [
   'tall',
   'short',
   'round',
-  'sharp'
+  'sharp',
+  'gold',
+  'golden',
+  'good',
+  'bad'
 ]
 adjs_infl = {
   'good':('better','best'),
