@@ -1,3 +1,4 @@
+from util import multidict_add
 from tags import *
 
 nouns = [
