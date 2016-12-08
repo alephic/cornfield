@@ -62,10 +62,10 @@ def get_prep_tag(head):
   return RLam(lambda tok: PP(head, tok) if isinstance(tok, DP) else None)
 
 def get_verb_tag(head, *arg_preds):
-  if len(arg_classes) == 0:
+  if len(arg_preds) == 0:
     return VP(head, [])
   pred = arg_preds[0]
-  rest = get_verb_tag(head, arg_preds[1:])
+  rest = get_verb_tag(head, *arg_preds[1:])
   return lambda tok: rest if pred(tok) else None
 
 def lam_apply(tok1, tok2):
@@ -86,7 +86,7 @@ def promote(tok):
     res.append(DP(None, INDEF, PLUR, tok.qualifiers))
   return res
 
-def parse(tokens):
+def parse_tokens(tokens):
   fringe = [tokens]
   while True:
     if fringe == []:
@@ -101,5 +101,7 @@ def parse(tokens):
       for y in promote(curr[i]):
         fringe.append(curr[:i]+[y]+curr[i+1:])
 
-def parse_imperative(text):
+def parse_text(text):
   words = text.lower().split(' ')
+  tokens = [(tags[w] if w in tags else guess_tags[w]) for w in words]
+  return parse_tokens(tokens)
