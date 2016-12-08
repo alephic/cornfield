@@ -1,3 +1,4 @@
+from util import multidict_add
 
 class NounQual:
   def __init__(self, head):
