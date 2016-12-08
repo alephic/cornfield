@@ -1,18 +1,45 @@
 from util import multidict_add
 import vocab
 
-class NounQual:
+class Noun:
+  visible = True
   def __init__(self, head):
     self.head = head
+  def __str__(self):
+    return self.head
+  def __repr__(self):
+    return 'N.'+self.head
 
-class AdjQual:
+class Adj:
+  visible = True
   def __init__(self, head):
     self.head = head
+  def __str__(self):
+    return self.head
+  def __repr__(self):
+    return 'Adj.'+self.head
 
 class PrepQual:
-  def __init__(self, prep_head, arg):
-    self.prep_head = prep_head
+  visible = True
+  def __init__(self, head, arg):
+    self.head = head
     self.arg = arg
+  def __str__(self):
+    return self.head+' '+str(self.arg)
+  def __repr__(self):
+    return 'PP.'+self.head+'('+repr(self.arg)+')'
+
+class Gender:
+  visible = False
+  def __init__(self, gender):
+    self.gender = gender
+  def __repr__(self):
+    return {MASC:'MASC',FEM:'FEM',NEUT:'NEUT'}[self.gender]
+
+#Gender values
+MASC = object()
+FEM = object()
+NEUT = object()
 
 #Count values
 SING = object()
@@ -28,23 +55,44 @@ class VP(Tag):
   def __init__(self, head, args):
     self.head = head
     self.args = args
+  def __str__(self):
+    return self.head+' '+' '.join(str(arg) for arg in self.args)
+  def __repr__(self):
+    return 'VP.'+self.head+'('+', '.join(repr(arg) for arg in self.args)+')'
 class NP(Tag):
   def __init__(self, count, qualifiers):
     self.count = count
     self.qualifiers = qualifiers
+  def __str__(self):
+    return ' '.join(str(qual) for qual in self.qualifiers if qual.visible)
+  def __repr__(self):
+    return 'NP('+', '.join(repr(qual) for qual in self.qualifiers)+')'
 class DP(Tag):
   def __init__(self, head, deft, count, qualifiers):
     self.head = head
     self.deft = deft
     self.count = count
     self.qualifiers = qualifiers
+  def __str__(self):
+    return self.head + ' ' + \
+      ' '.join(str(qual) for qual in self.qualifiers if qual.visible)
+  def __repr__(self):
+    return 'DP.'+self.head+'('+', '.join(repr(qual) for qual in self.qualifiers)+')'
 class PP(Tag):
   def __init__(self, head, arg):
     self.head = head
     self.arg = arg
+  def __str__(self):
+    return self.head + ' ' + str(self.arg)
+  def __repr__(self):
+    return 'PP.'+self.head+'('+repr(self.arg)+')'
 class AdvP(Tag):
   def __init__(self, head):
     self.head = head
+  def __str__(self):
+    return self.head
+  def __repr__(self):
+    return 'AdvP.'+self.head
 class RLam(Tag):
   def __init__(self, app):
     self.app = app
@@ -94,10 +142,10 @@ def parse_tokens(tokenss):
 def get_adj_tag(head):
   return RLam(
     lambda tok:
-      NP(tok.count, [AdjQual(head)]+tok.qualifiers) if isinstance(tok, NP) else None)
+      NP(tok.count, [Adj(head)]+tok.qualifiers) if isinstance(tok, NP) else None)
 
 def get_noun_tag(head, plur=False):
-  return NP(PLUR if plur else SING, [NounQual(head)])
+  return NP(PLUR if plur else SING, [Noun(head)])
 
 def get_prep_tag(head):
   return RLam(lambda tok: PP(head, tok) if isinstance(tok, DP) else None)
@@ -105,7 +153,7 @@ def get_prep_tag(head):
 def get_prep_mod_tag(head):
   return RLam(lambda tok1:
     LLam(lambda tok2:
-      NP(tok2.count, [PrepQual(head, tok1)]+tok2.qualifiers) \
+      NP(tok2.count, tok2.qualifiers+[PrepQual(head, tok1)]) \
         if isinstance(tok2, NP) else None) \
       if isinstance(tok1, DP) else None)
 
@@ -139,12 +187,15 @@ def add_adv(head):
   multidict_add(known_tags, head, AdvP(head))
 def add_det(head, deft, count):
   multidict_add(known_tags, head, get_det_tag(head, deft, count))
+def add_dp(head, deft, count, qualifiers):
+  multidict_add(known_tags, head, DP(head, deft, count, qualifiers))
 
 add_det('the', DEF, SING)
 add_det('the', DEF, PLUR)
 add_det('a', INDEF, SING)
 add_det('an', INDEF, SING)
 add_det('some', INDEF, PLUR)
+add_dp('him', DEF, SING, [Gender(MASC)])
 add_prep('at')
 add_prep('to')
 add_prep('with')
@@ -159,6 +210,7 @@ add_adv('back')
 add_adv('carefully')
 add_adv('closely')
 add_verb('look', tag_head(PP, 'at'))
+add_verb('look', tag_head(PP, 'at'), tag_head(AdvP, 'carefully'))
 add_verb('look', tag_head(AdvP, 'closely'), tag_head(PP, 'at'))
 add_verb('look', tag_head(AdvP, 'around'))
 add_verb('look', tag_head(AdvP, 'around'), tag_head(AdvP, 'carefully'))
@@ -172,19 +224,16 @@ add_verb('open', tag(DP))
 add_verb('open', tag(DP), tag_head(PP, 'with'))
 add_verb('close', tag(DP))
 add_verb('throw', tag(DP), tag_head(PP, 'at'))
-for noun in vocab.nouns_auto:
+for noun in vocab.nouns:
   add_noun(noun)
-  add_plur_noun(vocab.pluralize(noun))
-for (noun, plur_noun) in vocab.nouns_infl:
-  add_noun(noun)
-  add_plur_noun(plur_noun)
-for adj in vocab.adjectives:
-  add_adj(color)
+  add_plur_noun(vocab.get_plural(noun))
+for adj in vocab.adjs:
+  add_adj(adj)
 
 def guess_tags(word):
   res = [
     get_adj_tag(word),
-    NP(PLUR if word.endswith('s') else SING, [NounQual(word)])
+    NP(PLUR if word.endswith('s') else SING, [Noun(word)])
   ]
   return res
 

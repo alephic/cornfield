@@ -10,7 +10,10 @@ nouns_infl = {
   'woman': 'women'
 }
 def get_plural(noun):
-  return nouns_infl[noun] if noun in nouns_infl else noun+'s'
+  if noun in nouns_infl:
+    return nouns_infl[noun]
+  else:
+    return noun+'es' if noun.endswith('s') else noun+'s'
 
 adjs = [
   'small',
@@ -37,8 +40,8 @@ adjs = [
   'sharp'
 ]
 adjs_infl = {
-  'good':{'better','best'},
-  'bad':{'worse','worst'}
+  'good':('better','best'),
+  'bad':('worse','worst')
 }
 def get_adj_degrees(adj):
   if adj in adjs_infl:
