@@ -51,8 +51,11 @@ class LLam(Tag):
   def __init__(self, app):
     self.app = app
 
-def has_tag(t):
+def tag(t):
   return lambda tok: isinstance(tok, t)
+
+def tag_head(t, h):
+  return lambda tok: isinstance(tok, t) and tok.head == h
 
 def lam_apply(tok1, tok2):
   res = []
@@ -135,10 +138,34 @@ def add_det(head, deft, count):
   multidict_add(known_tags, head, get_det_tag(head, deft, count))
 
 add_det('the', DEF, SING)
-add_noun('thing')
-add_adj('green')
+add_det('the', DEF, PLUR)
+add_det('a', INDEF, SING)
+add_det('an', INDEF, SING)
+add_det('some', INDEF, PLUR)
 add_prep('at')
-add_verb('look', lambda tok: isinstance(tok, PP) and tok.head == 'at')
+add_prep('to')
+add_prep('with')
+add_prep('in')
+add_prep('on')
+add_prep('above')
+add_prep('below')
+add_prep_mod('of')
+add_prep_mod('with')
+add_adv('around')
+add_adv('back')
+add_verb('look', tag_head(PP, 'at'))
+add_verb('look', tag_head(AdvP, 'around'))
+add_verb('go', tag_head(PP, 'to'))
+add_verb('go', tag_head(AdvP, 'back'))
+add_verb('put', tag(DP), tag_head(PP, 'on'))
+add_verb('give', tag(DP), tag(DP))
+add_verb('give', tag(DP), tag_head(PP, 'to'))
+add_verb('open', tag(DP))
+add_verb('close', tag(DP))
+for noun in vocab.nouns:
+  add_noun(noun)
+for adj in vocab.adjs:
+  add_adj(color)
 
 def guess_tags(word):
   res = [
