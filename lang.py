@@ -1,4 +1,5 @@
 from util import multidict_add
+import vocab
 
 class NounQual:
   def __init__(self, head):
@@ -95,8 +96,8 @@ def get_adj_tag(head):
     lambda tok:
       NP(tok.count, [AdjQual(head)]+tok.qualifiers) if isinstance(tok, NP) else None)
 
-def get_noun_tag(head):
-  return NP(PLUR if head.endswith('s') else SING, [NounQual(head)])
+def get_noun_tag(head, plur=False):
+  return NP(PLUR if plur else SING, [NounQual(head)])
 
 def get_prep_tag(head):
   return RLam(lambda tok: PP(head, tok) if isinstance(tok, DP) else None)
@@ -126,6 +127,8 @@ def add_verb(head, *arg_preds):
   multidict_add(known_tags, head, get_verb_tag(head, *arg_preds))
 def add_noun(head):
   multidict_add(known_tags, head, get_noun_tag(head))
+def add_plur_noun(head):
+  multidict_add(known_tags, head, get_noun_tag(head, plur=True))
 def add_adj(head):
   multidict_add(known_tags, head, get_adj_tag(head))
 def add_prep(head):
@@ -162,9 +165,13 @@ add_verb('give', tag(DP), tag(DP))
 add_verb('give', tag(DP), tag_head(PP, 'to'))
 add_verb('open', tag(DP))
 add_verb('close', tag(DP))
-for noun in vocab.nouns:
+for noun in vocab.nouns_auto:
   add_noun(noun)
-for adj in vocab.adjs:
+  add_plur_noun(vocab.pluralize(noun))
+for (noun, plur_noun) in vocab.nouns_infl:
+  add_noun(noun)
+  add_plur_noun(plur_noun)
+for adj in vocab.adjectives:
   add_adj(color)
 
 def guess_tags(word):
