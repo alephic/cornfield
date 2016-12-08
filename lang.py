@@ -106,11 +106,11 @@ def get_prep_mod_tag(head):
       if isinstance(tok1, DP) else None)
 
 def get_verb_tag(head, *arg_preds):
-  if len(arg_preds) == 0:
-    return VP(head, [])
-  pred = arg_preds[0]
-  rest = get_verb_tag(head, *arg_preds[1:])
-  return lambda tok: rest if pred(tok) else None
+  def f(args, preds):
+    if len(preds) == 0:
+      return VP(head, args)
+    return RLam(lambda tok: f(args+[tok], preds[1:]) if preds[0](tok) else None)
+  return f([], arg_preds)
 
 def get_det_tag(head, deft, count):
   return RLam(lambda tok:
@@ -133,6 +133,12 @@ def add_adv(head):
   multidict_add(known_tags, head, AdvP(head))
 def add_det(head, deft, count):
   multidict_add(known_tags, head, get_det_tag(head, deft, count))
+
+add_det('the', DEF, SING)
+add_noun('thing')
+add_adj('green')
+add_prep('at')
+add_verb('look', lambda tok: isinstance(tok, PP) and tok.head == 'at')
 
 def guess_tags(word):
   res = [
