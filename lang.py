@@ -213,11 +213,11 @@ known_tags = {}
 def add_verb(head, *arg_preds):
   multidict_add(known_tags, head, V(head, [], arg_preds))
 def add_noun(head):
-  multidict_add(known_tags, head, NP(SING, [Noun(head)]))
+  multidict_add(known_tags, head, NP(SING, [N(head)]))
 def add_plur_noun(head):
-  multidict_add(known_tags, head, NP(PLUR, [Noun(head)]))
+  multidict_add(known_tags, head, NP(PLUR, [N(head)]))
 def add_adj(head):
-  multidict_add(known_tags, head, AdjP(head))
+  multidict_add(known_tags, head, Adj(head))
 def add_prep(head):
   multidict_add(known_tags, head, P(head))
 def add_pp(head):
@@ -255,7 +255,6 @@ add_adv('back')
 add_adv('carefully')
 add_adv('closely')
 add_verb('look', tag_head(PP, 'at'))
-add_verb('look')
 add_verb('examine', tag(DP))
 add_verb('go', tag_head(PP, 'to'))
 add_verb('go', tag_head(PP, 'back'))
@@ -273,9 +272,11 @@ for adj in vocab.adjs:
   add_adj(adj)
 
 def guess_tags(word):
+  if word.endswith('ly'):
+    return [Adv(word)]
   res = [
-    get_adj_tag(word),
-    NP(PLUR if word.endswith('s') else SING, [Noun(word)])
+    Adj(word),
+    NP(PLUR if word.endswith('s') else SING, [N(word)])
   ]
   return res
 
