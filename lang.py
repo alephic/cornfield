@@ -53,21 +53,6 @@ class LLam(Tag):
 def has_tag(t):
   return lambda tok: isinstance(tok, t)
 
-def get_adj_tag(head):
-  return RLam(
-    lambda tok:
-      NP([AdjQual(head)]+tok.qualifiers) if isinstance(tok, NP) else None)
-
-def get_prep_tag(head):
-  return RLam(lambda tok: PP(head, tok) if isinstance(tok, DP) else None)
-
-def get_verb_tag(head, *arg_preds):
-  if len(arg_preds) == 0:
-    return VP(head, [])
-  pred = arg_preds[0]
-  rest = get_verb_tag(head, *arg_preds[1:])
-  return lambda tok: rest if pred(tok) else None
-
 def lam_apply(tok1, tok2):
   res = []
   if isinstance(tok1, RLam):
@@ -86,8 +71,8 @@ def promote(tok):
     res.append(DP(None, INDEF, PLUR, tok.qualifiers))
   return res
 
-def parse_tokens(tokens):
-  fringe = [tokens]
+def parse_tokens(tokenss):
+  fringe = tokenss
   while True:
     if fringe == []:
       return None
@@ -101,7 +86,70 @@ def parse_tokens(tokens):
       for y in promote(curr[i]):
         fringe.append(curr[:i]+[y]+curr[i+1:])
 
-def parse_text(text):
+def get_adj_tag(head):
+  return RLam(
+    lambda tok:
+      NP(tok.count, [AdjQual(head)]+tok.qualifiers) if isinstance(tok, NP) else None)
+
+def get_noun_tag(head):
+  return NP(PLUR if head.endswith('s') else SING, [NounQual(head)])
+
+def get_prep_tag(head):
+  return RLam(lambda tok: PP(head, tok) if isinstance(tok, DP) else None)
+
+def get_prep_mod_tag(head):
+  return RLam(lambda tok1:
+    LLam(lambda tok2:
+      NP(tok2.count, [PrepQual(head, tok1)]+tok2.qualifiers) \
+        if isinstance(tok2, NP) else None) \
+      if isinstance(tok1, DP) else None)
+
+def get_verb_tag(head, *arg_preds):
+  if len(arg_preds) == 0:
+    return VP(head, [])
+  pred = arg_preds[0]
+  rest = get_verb_tag(head, *arg_preds[1:])
+  return lambda tok: rest if pred(tok) else None
+
+def get_det_tag(head, deft, count):
+  return RLam(lambda tok:
+    DP(head, deft, count, tok.qualifiers) \
+      if isinstance(tok, NP) and tok.count == count else None)
+
+known_tags = {}
+
+def add_verb(head, *arg_preds):
+  multidict_add(known_tags, head, get_verb_tag(head, *arg_preds))
+def add_noun(head):
+  multidict_add(known_tags, head, get_noun_tag(head))
+def add_adj(head):
+  multidict_add(known_tags, head, get_adj_tag(head))
+def add_prep(head):
+  multidict_add(known_tags, head, get_prep_tag(head))
+def add_prep_mod(head):
+  multidict_add(known_tags, head, get_prep_mod_tag(head))
+def add_adv(head):
+  multidict_add(known_tags, head, AdvP(head))
+def add_det(head, deft, count):
+  multidict_add(known_tags, head, get_det_tag(head, deft, count))
+
+def guess_tags(word):
+  res = [
+    get_adj_tag(word),
+    NP(PLUR if word.endswith('s') else SING, [NounQual(word)])
+  ]
+  return res
+
+def get_tags(word):
+  return known_tags[word] if word in known_tags else guess_tags(word)
+
+def tokenize(text):
   words = text.lower().split(' ')
-  tokens = [(tags[w] if w in tags else guess_tags[w]) for w in words]
-  return parse_tokens(tokens)
+  tokenss = [[]]
+  for word in words:
+    tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word)]
+  return tokenss
+
+def parse_text(text):
+  tokenss = tokenize(text)
+  return parse_tokens(tokenss)
