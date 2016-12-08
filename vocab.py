@@ -105,7 +105,7 @@ add_verb('close', tag(DP))
 add_verb('throw', tag(DP), tag_head(PP, 'at'))
 for noun in nouns:
   add_noun(noun)
-  add_plur_noun(vocab.get_plural(noun))
+  add_plur_noun(get_plural(noun))
 for adj in adjs:
   add_adj(adj)
 
