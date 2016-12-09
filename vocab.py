@@ -3,8 +3,25 @@ from tags import *
 
 known_tags = {}
 
+vowels = 'aeiou'
+consonants = 'bcdfghjklmnpqrstvwxz'
+
+def get_tpsingpres_form(base_form):
+  if base_form[-1] == 'y' and base_form[-2] in consonants:
+    return base_form[:-1]+'ies'
+  for sib_suf in ['s','sh','z','tch']:
+    if base_form.endswith(sib_suf):
+      return base_form+'es'
+  return base_form+'s'
+
 def add_verb(head, form, *arg_preds):
   multidict_add(known_tags, head, V(head, form, [], arg_preds))
+def add_verb_auto(base_form, *arg_preds):
+  add_verb(base_form, BASE, *arg_preds)
+  add_verb(get_tpsingpres_form(base_form), TPSINGPRES, *arg_preds)
+  add_verb(get_pret_form(base_form), PRET, *arg_preds)
+  add_verb(get_pret_form(base_form), PART, *arg_preds)
+  add_verb(get_gerund_form(base_form), GERUND, *arg_preds)
 def add_adj(head):
   multidict_add(known_tags, head, Adj(head))
 def add_prep(head):
@@ -57,6 +74,15 @@ add_pp('back')
 add_pp('around')
 add_prep_mod('of')
 add_prep_mod('with')
+# Copula
+copula_arg_pred = pred_or(tag(DP), tag(PP), tag(Adj))
+add_verb('be', BASE, copula_arg_pred)
+add_verb('am', FPSINGPRES, copula_arg_pred)
+add_verb('are', PLURPRES, copula_arg_pred)
+add_verb('was', SINGPRET, copula_arg_pred)
+add_verb('were', PLURPRET, copula_arg_pred)
+add_verb('being', GERUND, copula_arg_pred)
+add_verb('been', PART, copula_arg_pred)
 
 def guess_tags(word):
   if word.endswith('ly'):

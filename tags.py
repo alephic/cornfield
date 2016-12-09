@@ -33,11 +33,16 @@ DEF = object()
 INDEF = object()
 
 #Form values
-BASE = object()
-TPSP = object()
-PRET = object()
-PART = object()
-GERUND = object()
+BASE = object() # have / eat
+TPSINGPRES = object() # has / eats
+PRET = object() # had / ate
+PART = object() # had / eaten
+GERUND = object() # having / eating
+#Extra form values
+FPSINGPRES = object() # am
+PLURPRES = object() # are
+SINGPRET = object() # was
+PLURPRET = object() # were
 
 #Restrict values
 OBJ = object()
@@ -46,10 +51,16 @@ SUBJ = object()
 def subj_form_agrees(subj, form):
   if form == BASE:
     return subj.person != 3 or subj.count == PLUR
-  elif form == TPSP:
+  elif form == TPSINGPRES:
     return subj.person == 3 and subj.count == SING
   elif form == PRET:
     return True
+  elif form == SINGPRET:
+    return subj.count == SING
+  elif form == PLURPRET or form == PLURPRES:
+    return subj.count == PLUR
+  elif form == FPSINGPRES:
+    return subj.person == 1 and subj.count == SING
   return False
 
 def intern_arg(dp):
@@ -221,3 +232,11 @@ def tag(t):
 
 def tag_head(t, h):
   return lambda tok: isinstance(tok, t) and tok.head == h
+
+def pred_or(*preds):
+  def f(t):
+    for pred in preds:
+      if pred(t):
+        return True
+    return False
+  return f
