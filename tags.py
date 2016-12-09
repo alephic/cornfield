@@ -12,7 +12,12 @@ class Gender:
   def __init__(self, gender):
     self.gender = gender
   def __repr__(self):
-    return {MASC:'MASC',FEM:'FEM',NEUT:'NEUT'}[self.gender]
+    return 'GENDER.'+{MASC:'M',FEM:'F',NEUT:'N'}[self.gender]
+class Pronoun:
+  def __init__(self, person, reflexive=False):
+    self.person = person
+  def __repr__(self):
+    return 'PERS.'+str(self.person)
 
 #Gender values
 MASC = object()
@@ -27,6 +32,32 @@ PLUR = object()
 DEF = object()
 INDEF = object()
 
+#Form values
+BASE = object()
+TPSP = object()
+PRET = object()
+PART = object()
+GERUND = object()
+
+#Restrict values
+OBJ = object()
+SUBJ = object()
+
+def subj_form_agrees(subj, form):
+  if form == BASE:
+    return subj.person != 3 or subj.count == PLUR
+  elif form == TPSP:
+    return subj.person == 3 and subj.count == SING
+  elif form == PRET:
+    return True
+  return False
+
+def intern_arg(dp):
+  return (not dp.restrict) or (dp.restrict == OBJ)
+
+def extern_arg(dp):
+  return (not dp.restrict) or (dp.restrict == SUBJ)
+
 class ArgBox:
   def __init__(self, boxed, extra=False):
     self.boxed = boxed
@@ -34,14 +65,15 @@ class ArgBox:
 
 class Tag:
   pass
-class VP(Tag):
-  def __init__(self, head, args):
+class TP(Tag):
+  def __init__(self, head, form, args):
     self.head = head
+    self.form = form
     self.args = args
   def __str__(self):
-    return self.head+' '+' '.join(str(arg.boxed) for arg in self.args)
+    return str(self.args[0].boxed)+' '+self.head+' '+' '.join(str(arg.boxed) for arg in self.args)
   def __repr__(self):
-    return 'VP.'+self.head+'('+', '.join(repr(arg.boxed) for arg in self.args)+')'
+    return 'TP.'+self.head+'('+', '.join(repr(arg.boxed) for arg in self.args)+')'
 class NP(Tag):
   def __init__(self, count, qualifiers):
     self.count = count
@@ -51,11 +83,13 @@ class NP(Tag):
   def __repr__(self):
     return 'NP('+', '.join(repr(qual) for qual in self.qualifiers)+')'
 class DP(Tag):
-  def __init__(self, head, deft, count, qualifiers):
+  def __init__(self, head, deft, count, qualifiers, restrict=None, person=3):
     self.head = head
     self.deft = deft
     self.count = count
     self.qualifiers = qualifiers
+    self.restrict = restrict
+    self.person = person
   def __str__(self):
     return self.head + ' ' + \
       ' '.join(str(qual) for qual in self.qualifiers if qual.visible)
@@ -101,17 +135,32 @@ class Adj(RLam):
     return self.head
   def __repr__(self):
     return 'Adj.'+self.head
-class V(RLam):
-  def __init__(self, head, args, arg_preds):
+class VP(LLam):
+  def __init__(self, head, form, args):
     self.head = head
+    self.form = form
+    self.args = args
+  def app(self, tok):
+    if isinstance(tok, DP) and extern_arg(tok) and subj_form_agrees(tok, self.form):
+      return TP(self.head, self.form, [ArgBox(tok)]+self.args)
+    else:
+      return None
+  def __str__(self):
+    return self.head+' '+' '.join(str(arg.boxed) for arg in self.args)
+  def __repr__(self):
+    return 'VP.'+self.head+'('+', '.join(repr(arg.boxed) for arg in self.args)+')'
+class V(RLam):
+  def __init__(self, head, form, args, arg_preds):
+    self.head = head
+    self.form = form
     self.args = args
     self.arg_preds = arg_preds
   def app(self, tok):
     if self.arg_preds[0](tok):
       if len(self.arg_preds) == 1:
-        return VP(self.head, self.args+[ArgBox(tok)])
+        return VP(self.head, self.form, self.args+[ArgBox(tok)])
       else:
-        return V(self.head, self.args+[ArgBox(tok)], self.arg_preds[1:])
+        return V(self.head, self.form, self.args+[ArgBox(tok)], self.arg_preds[1:])
     else:
       return None
   def __str__(self):
