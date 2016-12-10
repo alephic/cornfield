@@ -13,12 +13,6 @@ def lam_apply(tok1, tok2):
       res.append(y2)
   return res
 
-def promote(tok):
-  res = []
-  if isinstance(tok, NP) and tok.count == PLUR:
-    res.append(DP(None, INDEF, PLUR, tok.qualifiers))
-  return res
-
 def parse_tokens(tokenss):
   fringe = tokenss
   while True:
@@ -27,12 +21,9 @@ def parse_tokens(tokenss):
     curr = fringe.pop()
     if len(curr) == 1:
       return curr[0]
-    for i in range(len(curr)):
-      if i < len(curr) - 1:
-        for y in lam_apply(curr[i], curr[i+1]):
-          fringe.append(curr[:i]+[y]+curr[i+2:])
-      for y in promote(curr[i]):
-        fringe.append(curr[:i]+[y]+curr[i+1:])
+    for i in range(len(curr)-1):
+      for y in lam_apply(curr[i], curr[i+1]):
+        fringe.append(curr[:i]+[y]+curr[i+2:])
 
 def tokenize(text):
   words = text.lower().split(' ')

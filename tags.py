@@ -1,23 +1,18 @@
 
 class N:
-  visible = True
   def __init__(self, head):
     self.head = head
   def __str__(self):
     return self.head
   def __repr__(self):
     return 'N.'+self.head
-class Gender:
-  visible = False
-  def __init__(self, gender):
-    self.gender = gender
-  def __repr__(self):
-    return 'GENDER.'+{MASC:'M',FEM:'F',NEUT:'N'}[self.gender]
 class Pronoun:
-  def __init__(self, person, reflexive=False):
-    self.person = person
+  def __init__(self, gender, reflexive=False):
+    self.gender = gender
+    self.reflexive = reflexive
   def __repr__(self):
-    return 'PERS.'+str(self.person)
+    g = {MASC:'MASC',FEM:'FEM',NEUT:'NEUT'}[self.gender]
+    return 'PRO.REFL.'+g if self.reflexive else 'PRO.'+g
 
 #Gender values
 MASC = object()
@@ -44,30 +39,41 @@ PLURPRES = object() # are
 SINGPRET = object() # was
 PLURPRET = object() # were
 
+def form_conflicts(f1, f2):
+  if f1 == PRET and (f2 in (SINGPRET, PLURPRET)):
+    return False
+  if f2 == PRET and (f1 in (SINGPRET, PLURPRET)):
+    return False
+  if f1 == f2:
+    return False
+  return True
+
 #Restrict values
 OBJ = object()
 SUBJ = object()
 
 def subj_form_agrees(subj, form):
+  ct = subj.count if isinstance(subj, DP) else PLUR
+  ps = subj.person if isinstance(subj, DP) else 3
   if form == BASE:
-    return subj.person != 3 or subj.count == PLUR
+    return ps != 3 or ct == PLUR
   elif form == TPSINGPRES:
-    return subj.person == 3 and subj.count == SING
+    return ps == 3 and ct == SING
   elif form == PRET:
     return True
   elif form == SINGPRET:
-    return subj.count == SING
+    return ct == SING
   elif form == PLURPRET or form == PLURPRES:
-    return subj.count == PLUR
+    return ct == PLUR
   elif form == FPSINGPRES:
-    return subj.person == 1 and subj.count == SING
+    return ps == 1 and ct == SING
   return False
 
-def intern_arg(dp):
-  return (not dp.restrict) or (dp.restrict == OBJ)
+def intern_arg(tok):
+  return ((not tok.restrict) or (tok.restrict == OBJ)) if isinstance(tok, DP) else True
 
-def extern_arg(dp):
-  return (not dp.restrict) or (dp.restrict == SUBJ)
+def extern_arg(tok):
+  return ((not tok.restrict) or (tok.restrict == SUBJ)) if isinstance(tok, DP) else True
 
 class ArgBox:
   def __init__(self, boxed, extra=False):
@@ -75,7 +81,7 @@ class ArgBox:
     self.extra = extra
 
 class Tag:
-  pass
+  head = None
 class TP(Tag):
   def __init__(self, head, form, args):
     self.head = head
@@ -90,24 +96,31 @@ class NP(Tag):
     self.count = count
     self.qualifiers = qualifiers
   def __str__(self):
-    return ' '.join(str(qual) for qual in self.qualifiers if qual.visible)
+    return ' '.join(str(qual) for qual in self.qualifiers)
   def __repr__(self):
     return 'NP('+', '.join(repr(qual) for qual in self.qualifiers)+')'
 class DP(Tag):
-  def __init__(self, head, deft, count, qualifiers, restrict=None, person=3):
+  def __init__(self, head, deft, count, arg, restrict=None, person=3):
     self.head = head
     self.deft = deft
     self.count = count
-    self.qualifiers = qualifiers
+    self.arg = arg
     self.restrict = restrict
     self.person = person
   def __str__(self):
-    return self.head + ' ' + \
-      ' '.join(str(qual) for qual in self.qualifiers if qual.visible)
+    return self.head + ' ' + str(self.arg)
   def __repr__(self):
-    return 'DP.'+self.head+'('+', '.join(repr(qual) for qual in self.qualifiers)+')'
+    return 'DP.'+self.head+'('+repr(self.arg)+')'
+class ConjP(Tag):
+  def __init__(self, head, args):
+    self.head = head
+    self.args = args
+  def __str__(self):
+    return ', '.join(str(arg) for arg in args[:-1])+' '+self.head+' ' \
+      + str(self.args[-1])
+  def __repr__(self):
+    return 'ConjP.'+self.head+'('+', '.join(repr(arg) for arg in self.args)+')'
 class PP(Tag):
-  visible = True
   def __init__(self, head, arg):
     self.head = head
     self.arg = arg
@@ -136,12 +149,11 @@ class LLamF(LLam):
   def __repr__(self):
     return 'LLamF'
 class Adj(RLam):
-  visible = True
   def __init__(self, head):
     self.head = head
   def app(self, tok):
     return NP(tok.count, [self]+tok.qualifiers) \
-      if isinstance(tok, NP) else None
+      if tag(tok, NP) else None
   def __str__(self):
     return self.head
   def __repr__(self):
@@ -152,7 +164,7 @@ class VP(LLam):
     self.form = form
     self.args = args
   def app(self, tok):
-    if isinstance(tok, DP) and extern_arg(tok) and subj_form_agrees(tok, self.form):
+    if tag(tok, DP) and extern_arg(tok) and subj_form_agrees(tok, self.form):
       return TP(self.head, self.form, [ArgBox(tok)]+self.args)
     else:
       return None
@@ -183,9 +195,9 @@ class Adv(LLam):
   def __init__(self, head):
     self.head = head
   def app(self, tok):
-    if isinstance(tok, V):
+    if tag(tok, V):
       return V(tok.head, tok.args+[ArgBox(self, extra=True)], tok.arg_preds)
-    elif isinstance(tok, VP):
+    elif tag(tok, VP):
       return VP(tok.head, tok.args+[ArgBox(self, extra=True)])
     else:
       return None
@@ -197,7 +209,7 @@ class P(RLam):
   def __init__(self, head):
     self.head = head
   def app(self, tok):
-    return PP(self.head, tok) if isinstance(tok, DP) else None
+    return PP(self.head, tok) if tag(tok, DP) else None
   def __str__(self):
     return self.head
   def __repr__(self):
@@ -208,33 +220,77 @@ class PM(RLam):
   def app(self, tok1):
     return LLamF(lambda tok2:
       NP(tok2.count, tok2.qualifiers+[PP(self.head, tok1)]) \
-        if isinstance(tok2, NP) else None) \
-      if isinstance(tok1, DP) else None
+        if tag(tok2, NP) else None) \
+      if tag(tok1, DP) else None
   def __str__(self):
     return self.head
   def __repr__(self):
     return 'PM.'+self.head
 class D(RLam):
-  def __init__(self, head, deft, count):
+  def __init__(self, head, deft, count, restrict, person):
     self.head = head
     self.deft = deft
     self.count = count
+    self.restrict = restrict
+    self.person = person
   def app(self, tok):
-    return DP(self.head, self.deft, self.count, tok.qualifiers) \
-      if isinstance(tok, NP) and tok.count == self.count else None
+    return DP(self.head, self.deft, self.count, tok.qualifiers, self.restrict, self.person) \
+      if tag(tok, NP) and tok.count == self.count else None
   def __str__(self):
     return self.head
   def __repr__(self):
     return 'D.'+self.head
+class Conj(RLam):
+  def __init__(self, head):
+    self.head = head
+  def app(self, tok1):
+    def f(tok2):
+      if tok1.__class__ == tok2.__class__:
+        if tok1.__class__ in (V, VP) and form_conflicts(tok1.form, tok2.form):
+          return None
+        return ConjP(self.head, [tok2, tok1])
+      return None
+    return LLamF(f)
+class ListComma(LLam):
+  head = ','
+  def __repr__(self):
+    return "','"
+  def app(self, tok1):
+    def f(tok2):
+      if isinstance(tok2, ConjP) and isinstance(tok2.args[0], tok1.__class__):
+        return ConjP(tok2.head, [tok1]+tok2.args)
+      return None
+    return LLamF(f)
 
-def tag(t):
-  return lambda tok: isinstance(tok, t)
+def tag(tok, t):
+  return isinstance(tok, t) or (isinstance(tok, ConjP) and isinstance(tok.args[0], t))
 
-def tag_head(t, h):
-  return lambda tok: isinstance(tok, t) and tok.head == h
+def tag_head(tok, t, h):
+  if isinstance(tok, t) and tok.head == h:
+    return True
+  if isinstance(tok, ConjP):
+    for arg in tok.args:
+      if not (isinstance(tok, t) and tok.head == head):
+        return False
+    return True
+  return False
 
-def vp_form(form):
-  return lambda tok: isinstance(tok, VP) and tok.form == form
+def vp_form(tok, form):
+  if isinstance(tok, VP) and tok.form == form:
+    return True
+  if isinstance(tok, ConjP):
+    for arg in tok.args:
+      if not (isinstance(tok, VP) and tok.form == form):
+        return False
+    return True
+  return False
+
+def tag_p(t):
+  return lambda tok: tag(tok, t)
+def tag_head_p(t, h):
+  return lambda tok: tag_head(tok, t, h)
+def vp_form_p(form):
+  return lambda tok: vp_form(tok, form)
 
 def pred_or(*preds):
   def f(t):

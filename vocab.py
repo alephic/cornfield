@@ -49,11 +49,13 @@ def add_prep_mod(head):
   multidict_add(known_tags, head, PM(head))
 def add_adv(head):
   multidict_add(known_tags, head, Adv(head))
-def add_det(head, deft, count):
-  multidict_add(known_tags, head, D(head, deft, count))
+def add_det(head, deft, count, restrict=None, person=3):
+  multidict_add(known_tags, head, D(head, deft, count, restrict, person))
 def add_dp(head, deft, count, qualifiers, restrict=None, person=3):
-  multidict_add(known_tags, head, DP(head, deft, count, qualifiers, restrict=restrict, person=person))
+  multidict_add(known_tags, head, DP(head, deft, count, qualifiers, restrict, person))
 
+multidict_add(known_tags, ',', ListComma())
+multidict_add(known_tags, 'and', Conj())
 add_det('the', DEF, SING)
 add_det('the', DEF, PLUR)
 add_det('a', INDEF, SING)
@@ -93,7 +95,7 @@ add_pp('around')
 add_prep_mod('of')
 add_prep_mod('with')
 # Copula
-copula_arg_pred = pred_or(tag(DP), tag(PP), tag(Adj))
+copula_arg_pred = pred_or(tag_p(DP), tag_p(PP), tag_p(Adj))
 add_verb('be', BASE, copula_arg_pred)
 add_verb('am', FPSINGPRES, copula_arg_pred)
 add_verb('are', PLURPRES, copula_arg_pred)
@@ -101,9 +103,11 @@ add_verb('was', SINGPRET, copula_arg_pred)
 add_verb('were', PLURPRET, copula_arg_pred)
 add_verb('being', GERUND, copula_arg_pred)
 add_verb('been', PART, copula_arg_pred)
-add_verb({BASE:'do', PRET:'did', PART:'done'}, tag(DP))
-add_verb({BASE:'have', TPSINGPRES:'has', PRET:'had'},
-  pred_or(tag(DP), vp_form(PART))
+add_verb_auto({BASE:'do', PRET:'did', PART:'done'}, tag_p(DP))
+add_verb_auto({BASE:'have', TPSINGPRES:'has', PRET:'had'},
+  pred_or(tag_p(DP), vp_form_p(PART)))
+add_verb_auto({BASE:'go', PRET:'went', PART:'gone'},
+  pred_or(tag_head_p(PP, 'to'), tag_head_p(PP, 'back')))
 
 def guess_tags(word):
   if word.endswith('ly'):
