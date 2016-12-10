@@ -7,21 +7,38 @@ vowels = 'aeiou'
 consonants = 'bcdfghjklmnpqrstvwxz'
 
 def get_tpsingpres_form(base_form):
-  if base_form[-1] == 'y' and base_form[-2] in consonants:
+  if base_form[-1] == 'y' and base_form[-2] not in vowels:
     return base_form[:-1]+'ies'
   for sib_suf in ['s','sh','z','tch']:
     if base_form.endswith(sib_suf):
       return base_form+'es'
   return base_form+'s'
 
+def get_pret_form(base_form):
+  if base_form[-1] == 'y' and base_form[-2] not in vowels:
+    return base_form[:-1]+'ies'
+  return base_form+'d' if base_form[-1] == 'e' else base_form+'ed'
+
+def get_gerund_form(base_form):
+  if base_form.endswith('ie'):
+    return base_form[:-2]+'ying'
+  return base_form[:-1]+'ing' if base_form[-1] == 'e' else base_form+'ing'
+
 def add_verb(head, form, *arg_preds):
   multidict_add(known_tags, head, V(head, form, [], arg_preds))
-def add_verb_auto(base_form, *arg_preds):
-  add_verb(base_form, BASE, *arg_preds)
-  add_verb(get_tpsingpres_form(base_form), TPSINGPRES, *arg_preds)
-  add_verb(get_pret_form(base_form), PRET, *arg_preds)
-  add_verb(get_pret_form(base_form), PART, *arg_preds)
-  add_verb(get_gerund_form(base_form), GERUND, *arg_preds)
+def add_verb_auto(forms, *arg_preds):
+  add_verb(forms[BASE], BASE, *arg_preds)
+  if TPSINGPRES in forms:
+    add_verb(forms[TPSINGPRES], TPSINGPRES, *arg_preds)
+  else:
+    add_verb(get_tpsingpres_form(forms[BASE]), TPSINGPRES, *arg_preds)
+  pret_form = forms[PRET] if PRET in forms else get_pret_form(forms[BASE])
+  add_verb(pret_form, PRET, *arg_preds)
+  if PART in forms:
+    add_verb(forms[PART], PART, *arg_preds)
+  else:
+    add_verb(pret_form, PART, *arg_preds)
+  add_verb(get_gerund_form(forms[BASE]), GERUND, *arg_preds)
 def add_adj(head):
   multidict_add(known_tags, head, Adj(head))
 def add_prep(head):
@@ -63,6 +80,7 @@ add_dp('you', DEF, SING, [Pronoun()], person=2)
 add_dp('you', DEF, PLUR, [Pronoun()], person=2)
 add_dp('yourself', DEF, SING, [Pronoun(reflexive=True)], restrict=OBJ, person=2)
 add_dp('yourselves', DEF, PLUR, [Pronoun(reflexive=True)], restrict=OBJ, person=2)
+add_dp('that', DEF, SING, [Gender(NEUT), Pronoun()])
 add_prep('at')
 add_prep('to')
 add_prep('with')
@@ -83,6 +101,9 @@ add_verb('was', SINGPRET, copula_arg_pred)
 add_verb('were', PLURPRET, copula_arg_pred)
 add_verb('being', GERUND, copula_arg_pred)
 add_verb('been', PART, copula_arg_pred)
+add_verb({BASE:'do', PRET:'did', PART:'done'}, tag(DP))
+add_verb({BASE:'have', TPSINGPRES:'has', PRET:'had'},
+  pred_or(tag(DP), vp_form(PART))
 
 def guess_tags(word):
   if word.endswith('ly'):

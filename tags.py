@@ -233,6 +233,9 @@ def tag(t):
 def tag_head(t, h):
   return lambda tok: isinstance(tok, t) and tok.head == h
 
+def vp_form(form):
+  return lambda tok: isinstance(tok, VP) and tok.form == form
+
 def pred_or(*preds):
   def f(t):
     for pred in preds:
