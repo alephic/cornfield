@@ -13,6 +13,18 @@ class Pronoun:
   def __repr__(self):
     g = {MASC:'MASC',FEM:'FEM',NEUT:'NEUT'}[self.gender]
     return 'PRO.REFL.'+g if self.reflexive else 'PRO.'+g
+class Speaker:
+  def __repr__(self):
+    return 'SPEAKER'
+class Listener:
+  def __repr__(self):
+    return 'LISTENER'
+class Possessive:
+  def __init__(self, owner, owned):
+    self.owner = owner
+    self.owned = owned
+  def __repr__(self):
+    return 'POSS('+repr(self.owner)+','+repr(self.owned)+')'
 
 #Gender values
 MASC = object()
@@ -22,6 +34,7 @@ NEUT = object()
 #Count values
 SING = object()
 PLUR = object()
+UNSPEC = object()
 
 #Deft values
 DEF = object()
@@ -92,6 +105,7 @@ class TP(Tag):
   def __repr__(self):
     return 'TP.'+self.head+'('+', '.join(repr(arg.boxed) for arg in self.args)+')'
 class NP(Tag):
+  visible = True
   def __init__(self, count, qualifiers):
     self.count = count
     self.qualifiers = qualifiers
@@ -108,7 +122,11 @@ class DP(Tag):
     self.restrict = restrict
     self.person = person
   def __str__(self):
-    return self.head + ' ' + str(self.arg)
+    if isinstance(self.arg, NP):
+      return self.head+' '+str(self.arg)
+    elif isinstance(self.arg, Possessive):
+      return str(self.arg.owner)+"'s "+str(self.arg.owned)
+    return self.head
   def __repr__(self):
     return 'DP.'+self.head+'('+repr(self.arg)+')'
 class ConjP(Tag):
@@ -234,8 +252,8 @@ class D(RLam):
     self.restrict = restrict
     self.person = person
   def app(self, tok):
-    return DP(self.head, self.deft, self.count, tok.qualifiers, self.restrict, self.person) \
-      if tag(tok, NP) and tok.count == self.count else None
+    return DP(self.head, self.deft, tok.count, tok, self.restrict, self.person) \
+      if tag(tok, NP) and (tok.count == self.count or self.count == UNSPEC) else None
   def __str__(self):
     return self.head
   def __repr__(self):
@@ -251,16 +269,16 @@ class Conj(RLam):
         return ConjP(self.head, [tok2, tok1])
       return None
     return LLamF(f)
-class ListComma(LLam):
-  head = ','
-  def __repr__(self):
-    return "','"
-  def app(self, tok1):
-    def f(tok2):
-      if isinstance(tok2, ConjP) and isinstance(tok2.args[0], tok1.__class__):
-        return ConjP(tok2.head, [tok1]+tok2.args)
-      return None
-    return LLamF(f)
+
+list_comma_tag = LLamF(lambda tok1:
+  RLamF(lambda tok2: ConjP(tok2.head, [tok1]+tok2.args) if isinstance(tok2, ConjP) \
+    and isinstance(tok2.args[0], tok1.__class__) else None))
+
+poss_suff_tag = LLamF(lambda tok1:
+  RLamF(lambda tok2:
+    DP("'s", DEF, tok2.count, Possessive(tok1, tok2), None, 3) \
+      if tag(tok2, NP) else None) \
+    if tag(tok1, DP) else None)
 
 def tag(tok, t):
   return isinstance(tok, t) or (isinstance(tok, ConjP) and isinstance(tok.args[0], t))
