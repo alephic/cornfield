@@ -3,14 +3,12 @@ from vocab import *
 
 def lam_apply(tok1, tok2):
   res = []
-  if isinstance(tok1, RLam):
-    y1 = tok1.app(tok2)
-    if y1:
-      res.append(y1)
-  if isinstance(tok2, LLam):
-    y2 = tok2.app(tok1)
-    if y2:
-      res.append(y2)
+  y1 = tok1.rlam(tok2)
+  if y1:
+    res.append(y1)
+  y2 = tok2.llam(tok1)
+  if y2:
+    res.append(y2)
   return res
 
 def parse_tokens(tokenss):
