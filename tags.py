@@ -17,6 +17,7 @@ PLUR = object()
 
 # Verb tense/aspect
 FORM = object()
+BASE = object()
 PRET = object()
 PRES = object()
 PART = object()
@@ -32,12 +33,15 @@ VP = object()
 TP = object()
 CP = object()
 Adj = object()
+Adv = object()
+PP = object()
 
 # Special values
 ANY = object()
 
 # Special features
 HAS_SUBJ = object()
+PP_LEX = object()
 
 def matches(spec, feat):
   if spec == ANY or feat == ANY:
@@ -53,10 +57,21 @@ def matches(spec, feat):
   return feat == spec
 
 def pat_matches(pat, tok):
-  for (s, f) in pat.items():
-    if not matches(s, tok[f]):
-      return False
-  return True
+  if isinstance(pat, list):
+    for subpat in pat:
+      m = True
+      for (s, f) in subpat.items():
+        if not matches(s, tok[f]):
+          m = False
+          break
+      if m:
+        return True
+    return False
+  else:
+    for (s, f) in pat.items():
+      if not matches(s, tok[f]):
+        return False
+    return True
 
 class Token:
   def __init__(self, lex):
@@ -134,12 +149,12 @@ def get_verb_rlam(arg_pats):
   return Dummy.rl
 
 class Verb(FeatToken):
-  def __init__(self, lex, form, arg_pats):
+  def __init__(self, lex, form, subj_person, subj_count, arg_pats):
     self.lex = lex
-    self.feats = {FORM: form, CAT: VP}
+    self.feats = {FORM: form, CAT: VP, PERSON: subj_person, COUNT: subj_count}
     self.rlam = get_verb_rlam(arg_pats)
   def llam(self, other):
-    if pat_matches({CAT: DP, CASE: NOM}, other):
+    if pat_matches({CAT: DP, CASE: NOM, PERSON: self[PERSON], COUNT: self[COUNT]}, other):
       return ArgL(self, other, rlam=self.rlam, feats={HAS_SUBJ:True})
 
 class Noun(FeatToken):
@@ -150,7 +165,7 @@ class Noun(FeatToken):
     else:
       self.feats = {CAT: NP, COUNT: SING}
 
-def PosAdjective(FeatToken):
+class PosAdjective(FeatToken):
   def __init__(self, lex):
     self.lex = lex
     self.feats = {CAT: Adj}
@@ -158,11 +173,38 @@ def PosAdjective(FeatToken):
     if matches(NP, other[CAT]):
       return ModL(other, self)
   
-def Determiner(FeatToken):
+class Determiner(FeatToken):
   def __init__(self, lex, count):
     self.lex = lex
     self.feats = {COUNT: count}
   def rlam(self, other):
-    if pat_matches({CAT:NP, COUNT: self[COUNT]}, other):
+    if pat_matches({CAT: NP, COUNT: self[COUNT]}, other):
       return ArgR(self, other, feats={CAT: DP, PERSON: THIRD, CASE: ANY})
+
+class Adverb(FeatToken):
+  def __init__(self, lex):
+    self.lex = lex
+    self.feats = {CAT: Adv}
+  def rlam(self, other):
+    if matches(VP, other[CAT]):
+      return ModL(other, self)
+  def llam(self, other):
+    if matches(VP, other[CAT]):
+      return ModR(other, self)
+
+def get_prep_rlam(head_pat, arg_pat):
+  class Dummy:
+    def llam(self, other):
+      if pat_matches(head_pat, other):
+        return ModR(other, self)
+    def rlam(self, other):
+      if pat_matches(arg_pat, other):
+        return ArgR(self, other, feats={CAT:PP}, llam=Dummy.llam)
+  return Dummy.rlam
+
+class Preposition(FeatToken):
+  def __init__(self, lex, head_pat, arg_pat):
+    self.lex = lex
+    self.feats = {PP_LEX: lex}
+    self.rlam = get_prep_rlam(head_pat, arg_pat)
   
