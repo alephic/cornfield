@@ -1,40 +1,46 @@
 
+class Feat:
+  def __init__(self, name):
+    self.name = name
+  def __repr__(self):
+    return self.name
+  def __str__(self):
+    return self.name
+
 # Person
-PERSON = object()
-FIRST = object()
-SECOND = object()
-THIRD = object()
+PERSON = Feat("PERSON")
+FIRST = Feat("FIRST")
+SECOND = Feat("SECOND")
+THIRD = Feat("THIRD")
 
 # Case
-CASE = object()
-NOM = object()
-ACC = object()
+CASE = Feat("CASE")
+NOM = Feat("NOM")
+ACC = Feat("ACC")
 
 # Count
-COUNT = object()
-SING = object()
-PLUR = object()
+COUNT = Feat("COUNT")
+SING = Feat("SING")
+PLUR = Feat("PLUR")
 
 # Verb tense/aspect
-FORM = object()
-BASE = object()
-PRET = object()
-PRES = object()
-PART = object()
-GERUND = object()
+FORM = Feat("FORM")
+BASE = Feat("BASE")
+PRET = Feat("PRET")
+PRES = Feat("PRES")
+PART = Feat("PART")
+GERUND = Feat("GERUND")
 
 # Span labels
-CAT = object()
-N = object()
-NP = object()
-DP = object()
-V = object()
-VP = object()
-TP = object()
-CP = object()
-Adj = object()
-Adv = object()
-PP = object()
+CAT = Feat("CAT")
+NP = Feat("NP")
+DP = Feat("DP")
+VP = Feat("VP")
+TP = Feat("TP")
+CP = Feat("CP")
+Adj = Feat("Adj")
+Adv = Feat("Adv")
+PP = Feat("PP")
 
 # Special values
 ANY = object()
@@ -85,6 +91,8 @@ class Token:
     pass
   def __str__(self):
     return self.lex
+  def __repr__(self):
+    return self.lex
 
 class FeatToken(Token):
   def __init__(self, lex, feats, rlam=no_lam, llam=no_lam):
@@ -92,6 +100,10 @@ class FeatToken(Token):
     self.feats = feats
   def __getitem__(self, item):
     return self.feats[item] if item in self.feats else None
+  def __repr__(self):
+    if CAT in self.feats:
+      return repr(self.feats[CAT])+':'+self.lex
+    return self.lex
     
 class HeadedToken(Token):
   def __getitem__(self, item):
@@ -110,10 +122,14 @@ class Arg(HeadedToken):
 class ArgR(Arg):
   def __str__(self):
     return str(self.head)+' '+str(self.arg)
+  def __repr__(self):
+    return repr(self.head)+' ('+repr(self.arg)+')'
 
 class ArgL(Arg):
   def __str__(self):
     return str(self.arg)+' '+str(self.head)
+  def __repr__(self):
+    return '('+repr(self.arg)+') '+repr(self.head)
     
 def mod_rlam(mod, other):
   res = mod.head.rlam(mod.head, other)
@@ -136,10 +152,14 @@ class Mod(HeadedToken):
 class ModR(Mod):
   def __str__(self):
     return str(self.head)+' '+str(self.mod)
+  def __repr__(self):
+    return repr(self.head)+' ['+repr(self.mod)+']'
 
 class ModL(Mod):
   def __str__(self):
     return str(self.mod)+' '+str(self.head)
+  def __repr__(self):
+    return '['+repr(self.mod)+'] '+repr(self.head)
 
 def get_verb_rlam(arg_pats):
   if len(arg_pats) == 0:
