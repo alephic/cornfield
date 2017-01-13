@@ -3,10 +3,10 @@ from vocab import *
 
 def lam_apply(tok1, tok2):
   res = []
-  y1 = tok1.rlam(tok2)
+  y1 = tok1.rlam(tok1, tok2)
   if y1:
     res.append(y1)
-  y2 = tok2.llam(tok1)
+  y2 = tok2.llam(tok2, tok1)
   if y2:
     res.append(y2)
   return res
