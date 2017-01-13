@@ -28,6 +28,10 @@ def tokenize(text):
   tokenss = [[]]
   for word in words:
     tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word)]
+    for postfix in postfixes:
+      if word.endswith(postfix):
+        tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(postfix)]
+        break
   return tokenss
 
 def parse_text(text):

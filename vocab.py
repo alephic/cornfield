@@ -2,6 +2,7 @@ from util import multidict_add
 from tags import *
 
 known_tags = {}
+postfixes = ['\'s', '\'ve', '\'d', '\'m', '\'re', ',', '.', '?', '!']
 
 def get_tags(lex):
   return known_tags[lex] if lex in known_tags else guess_tags(lex)
@@ -12,6 +13,8 @@ def guess_tags(lex):
 def add_tok(tok):
   multidict_add(known_tags, tok.lex, tok)
 
+add_tok(Possessive('\'s'))
+add_tok(Preposition('of', {CAT: DP}, {CAT: DP}))
 add_tok(Determiner('the', [SING, PLUR]))
 add_tok(Determiner('a', SING))
 add_tok(Determiner('an', SING))
@@ -52,15 +55,18 @@ add_tok(FeatToken('this', {CAT: DP, CASE: ANY, COUNT: SING, PERSON: THIRD}))
 add_tok(Determiner('this', SING))
 add_tok(FeatToken('these', {CAT: DP, CASE: ANY, COUNT: PLUR, PERSON: THIRD}))
 add_tok(Determiner('these', PLUR))
+
 copula_arg_pat_base = [
   {CAT: VP, FORM: GERUND, HAS_SUBJ: False},
   {CAT: [Adj, PP]}
 ]
-copula_arg_pat_sing = [{CAT: DP, CASE: ACC, COUNT: SING}]+copula_arg_pat_base
-copula_arg_pat_plur = [{CAT: DP, CASE: ACC, COUNT: PLUR}]+copula_arg_pat_base
-copula_arg_pat_any = [{CAT: DP, CASE: ACC, COUNT: ANY}]+copula_arg_pat_base
-add_tok(Verb('am', PRES, FIRST, SING, copula_arg_pat_sing))
+copula_arg_pat_sing = [[{CAT: DP, CASE: ACC, COUNT: SING}]+copula_arg_pat_base]
+copula_arg_pat_plur = [[{CAT: DP, CASE: ACC, COUNT: PLUR}]+copula_arg_pat_base]
+copula_arg_pat_any = [[{CAT: DP, CASE: ACC, COUNT: ANY}]+copula_arg_pat_base]
+add_tok(Verb('am', PRES, FIRST, SING, copula_arg_pat_sing]))
+add_tok(Verb('\'m', PRES, FIRST, SING, copula_arg_pat_sing))
 add_tok(Verb('are', PRES, ANY, PLUR, copula_arg_pat_any))
+add_tok(Verb('\'re', PRES, ANY, PLUR, copula_arg_pat_any))
 add_tok(Verb('are', PRES, SECOND, SING, copula_arg_pat_sing))
 add_tok(Verb('is', PRES, THIRD, SING, copula_arg_pat_sing))
 add_tok(Verb('was', PRET, [FIRST, THIRD], SING, copula_arg_pat_sing))
@@ -69,3 +75,11 @@ add_tok(Verb('were', PRET, SECOND, PLUR, copula_arg_pat_any))
 add_tok(Verb('been', PART, ANY, ANY, copula_arg_pat_any))
 add_tok(Verb('being', GERUND, ANY, ANY, copula_arg_pat_any))
 add_tok(Verb('be', BASE, ANY, ANY, copula_arg_pat_any))
+
+have_aux_arg_pat = {CAT: VP, FORM: PART, HAS_SUBJ: False}
+add_tok(Verb('have', [PRES, BASE], ANY, ANY, have_aux_arg_pat))
+add_tok(Verb('\'ve', [PRES, BASE], ANY, ANY, have_aux_arg_pat))
+add_tok(Verb('has', PRES, THIRD, SING, have_aux_arg_pat))
+add_tok(Verb('\'s', PRES, THIRD, SING, have_aux_arg_pat))
+add_tok(Verb('had', PRET, ANY, ANY, have_aux_arg_pat))
+add_tok(Verb('\'d', PRET, ANY, ANY, have_aux_arg_pat))

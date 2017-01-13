@@ -47,7 +47,7 @@ ANY = object()
 
 # Special features
 HAS_SUBJ = object()
-PP_LEX = object()
+LEX = object()
 
 def matches(spec, feat):
   if spec == ANY or feat == ANY:
@@ -203,6 +203,14 @@ class Determiner(FeatToken):
   def __init__(self, lex, count):
     super().__init__(lex, {COUNT: count}, rlam=det_rlam)
 
+def poss_llam(poss, other):
+  if matches(DP, other[CAT]):
+    return ArgL(poss, other, rlam=det_rlam)
+
+class Possessive(FeatToken):
+  def __init__(self, lex):
+    super().__init__(lex, {COUNT: ANY}, llam=poss_llam)
+
 def adv_rlam(adv, other):
   if matches(VP, other[CAT]):
     return ModL(other, adv)
@@ -214,16 +222,34 @@ class Adverb(FeatToken):
   def __init__(self, lex):
     super().__init__(lex, {CAT: Adv}, rlam=adv_rlam, llam=adv_llam)
 
-def get_prep_rlam(head_pat, arg_pat):
+def get_prep_mod_rlam(head_pat, arg_pat):
   def prep_llam(prep, other):
     if pat_matches(head_pat, other):
       return ModR(other, prep)
   def prep_rlam(prep, other):
     if pat_matches(arg_pat, other):
-      return ArgR(prep, other, feats={CAT:PP}, llam=prep_llam)
+      return ArgR(prep, other, feats={CAT: PP}, llam=prep_llam)
   return prep_rlam
 
-class Preposition(FeatToken):
+class PrepositionMod(FeatToken):
   def __init__(self, lex, head_pat, arg_pat):
-    super().__init__(lex, {PP_LEX: lex}, rlam=get_prep_rlam(head_pat, arg_pat))
+    super().__init__(lex, {LEX: lex}, rlam=get_prep_mod_rlam(head_pat, arg_pat))
+
+def get_prep_arg_rlam(arg_pat):
+  def prep_rlam(prep, other):
+    if pat_matches(arg_pat, other):
+      return ArgR(prep, other, feats={CAT: PP})
+  return prep_rlam
+
+class PrepositionArg(FeatToken):
+  def __init__(self, lex, arg_pat):
+    super().__init__(lex, {LEX: lex}, rlam=get_prep_arg_rlam(arg_pat))
+
+def tense_rlam(tense, other):
+  if pat_matches({CAT: VP, FORM: BASE, HAS_SUBJ: False}, other):
+    return ArgR(tense, other, feats={CAT: TP}, rlam=other.rlam, llam=other.llam)
+
+class Tense(FeatToken):
+  def __init__(self, lex):
+    super().__init__(lex, {LEX: lex, HAS_SUBJ: False}, rlam=tense_rlam)
   
