@@ -27,11 +27,16 @@ def tokenize(text):
   words = text.lower().split(' ')
   tokenss = [[]]
   for word in words:
-    tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word)]
+    has_postfix = False
     for postfix in postfixes:
       if word.endswith(postfix):
+        has_postfix = True
+        if len(word) > len(postfix):
+          tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word[:-len(postfix)])]
         tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(postfix)]
         break
+    if not has_postfix:
+      tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word)]
   return tokenss
 
 def parse_text(text):

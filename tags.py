@@ -25,11 +25,12 @@ PLUR = Feat("PLUR")
 
 # Verb tense/aspect
 FORM = Feat("FORM")
-BASE = Feat("BASE")
+BARE = Feat("BARE")
 PRET = Feat("PRET")
 PRES = Feat("PRES")
 PART = Feat("PART")
 GERUND = Feat("GERUND")
+MODAL = Feat("MODAL")
 
 # Span labels
 CAT = Feat("CAT")
@@ -43,11 +44,17 @@ Adv = Feat("Adv")
 PP = Feat("PP")
 
 # Special values
-ANY = object()
+ANY = Feat("ANY")
 
 # Special features
-HAS_SUBJ = object()
-LEX = object()
+HAS_SUBJ = Feat("HAS_SUBJ")
+LEX = Feat("LEX")
+ARG_CAT = Feat("ARG_CAT")
+
+# Moods
+MOOD = Feat("MOOD")
+INTER = Feat("INTER")
+DECL = Feat("DECL")
 
 def matches(spec, feat):
   if spec == ANY or feat == ANY:
@@ -168,16 +175,28 @@ def get_verb_rlam(arg_pats):
     if pat_matches(arg_pats[0], other):
       return ArgR(vp, other, rlam=get_verb_rlam(arg_pats[1:]), llam=vp.llam)
   return verb_rlam
-def verb_llam(vp, other):
-  if pat_matches({CAT: DP, CASE: NOM, PERSON: vp[PERSON], COUNT: vp[COUNT]}, other):
-    return ArgL(vp, other, rlam=vp.rlam, feats={HAS_SUBJ:True})
+def get_verb_llam(subj_pat):
+  def verb_llam(vp, other):
+    if pat_matches(subj_pat, other):
+      return ArgL(vp, other, rlam=vp.rlam, feats={HAS_SUBJ:True})
+  return verb_llam
+def get_verb_inter_rlam(subj_pat, arg_pats):
+  def verb_rlam(vp, other):
+    if pat_matches(subj_pat, other):
+      return ArgR(vp, other, rlam=get_verb_rlam(arg_pats), feats={HAS_SUBJ:True})
+  return verb_rlam
+
+def nom_subj_pat(person, count):
+  return {CAT: DP, CASE: NOM, PERSON: person, COUNT: count}
+nom_subj_pat_any = nom_subj_pat(ANY, ANY)
 
 class Verb(FeatToken):
-  def __init__(self, lex, form, subj_person, subj_count, arg_pats):
-    self.lex = lex
-    self.feats = {FORM: form, CAT: VP, PERSON: subj_person, COUNT: subj_count}
-    self.rlam = get_verb_rlam(arg_pats)
-    self.llam = verb_llam
+  def __init__(self, lex, form, subj_pat, arg_pats):
+    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: VP, HAS_SUBJ: False}, rlam=get_verb_rlam(arg_pats), llam=get_verb_llam(subj_pat))
+
+class VerbInter(FeatToken):
+  def __init__(self, lex, form, subj_pat, arg_pats):
+    super().__init__(lex, {FORM: form, MOOD: INTER, CAT: VP, HAS_SUBJ: False}, rlam=get_verb_inter_rlam(subj_pat, arg_pats))
 
 class Noun(FeatToken):
   def __init__(self, lex, count):
@@ -238,18 +257,35 @@ class PrepositionMod(FeatToken):
 def get_prep_arg_rlam(arg_pat):
   def prep_rlam(prep, other):
     if pat_matches(arg_pat, other):
-      return ArgR(prep, other, feats={CAT: PP})
+      return ArgR(prep, other, feats={CAT: PP, ARG_CAT: other[CAT]})
   return prep_rlam
 
 class PrepositionArg(FeatToken):
   def __init__(self, lex, arg_pat):
     super().__init__(lex, {LEX: lex}, rlam=get_prep_arg_rlam(arg_pat))
 
-def tense_rlam(tense, other):
-  if pat_matches({CAT: VP, FORM: BASE, HAS_SUBJ: False}, other):
-    return ArgR(tense, other, feats={CAT: TP}, rlam=other.rlam, llam=other.llam)
+class ConjunctPhrase(Token):
+  def __init__(self, lex, head_l, head_r):
+    super().__init__(lex, rlam=mod_rlam, llam=mod_llam)
+    self.head = head_l
+    self.head_r = head_r
+  def __str__(self):
+    return str(self.head)+' '+self.lex+' '+str(self.head_r)
+  def __repr__(self):
+    return '('+repr(self.head)+') &:'+self.lex+' ('+repr(self.head_r)+')'
+  def __getitem__(self, item):
+    if matches(DP, self.head[CAT]) and item == COUNT:
+      return PLUR
+    else:
+      return self.head[item]
 
-class Tense(FeatToken):
+def conj_rlam(conj, other_r):
+  if other_r[CAT]:
+    def conj_llam(conj, other_l):
+      if matches(other_r[CAT], other_l[CAT]):
+        return ConjunctPhrase(conj.lex, other_l, other_r)
+    return Token(conj.lex, llam=conj_llam)
+
+class Conjunction(Token):
   def __init__(self, lex):
-    super().__init__(lex, {LEX: lex, HAS_SUBJ: False}, rlam=tense_rlam)
-  
+    super().__init__(lex, rlam=conj_rlam)
