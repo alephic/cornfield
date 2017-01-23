@@ -241,28 +241,36 @@ class Adverb(FeatToken):
   def __init__(self, lex):
     super().__init__(lex, {CAT: Adv}, rlam=adv_rlam, llam=adv_llam)
 
-def get_prep_mod_rlam(head_pat, arg_pat):
+def get_prep_mod_rlam(head_pat):
   def prep_llam(prep, other):
     if pat_matches(head_pat, other):
       return ModR(other, prep)
   def prep_rlam(prep, other):
-    if pat_matches(arg_pat, other):
+    if matches(DP, other[CAT]):
       return ArgR(prep, other, feats={CAT: PP}, llam=prep_llam)
   return prep_rlam
 
 class PrepositionMod(FeatToken):
-  def __init__(self, lex, head_pat, arg_pat):
-    super().__init__(lex, {LEX: lex}, rlam=get_prep_mod_rlam(head_pat, arg_pat))
+  def __init__(self, lex, head_pat):
+    super().__init__(lex, {LEX: lex}, rlam=get_prep_mod_rlam(head_pat))
 
-def get_prep_arg_rlam(arg_pat):
-  def prep_rlam(prep, other):
+def prep_rlam(prep, other):
+  if matches(DP, other[CAT]):
+    return ArgR(prep, other, feats={CAT: PP})
+
+class Preposition(FeatToken):
+  def __init__(self, lex):
+    super().__init__(lex, {LEX: lex}, rlam=prep_rlam)
+
+def get_comp_rlam(arg_pat):
+  def comp_rlam(comp, other):
     if pat_matches(arg_pat, other):
-      return ArgR(prep, other, feats={CAT: PP, ARG_CAT: other[CAT]})
-  return prep_rlam
+      return ArgR(comp, other, feats={CAT: CP})
+  return comp_rlam
 
-class PrepositionArg(FeatToken):
+class Complementizer(FeatToken):
   def __init__(self, lex, arg_pat):
-    super().__init__(lex, {LEX: lex}, rlam=get_prep_arg_rlam(arg_pat))
+    super().__init__(lex, {LEX: lex}, rlam=get_comp_rlam(arg_pat))
 
 class ConjunctPhrase(Token):
   def __init__(self, lex, head_l, head_r):

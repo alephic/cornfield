@@ -2,7 +2,7 @@ from util import multidict_add
 from tags import *
 
 known_tags = {}
-postfixes = ['\'s', '\'ve', '\'d', '\'m', '\'re', ',', '.', '?', '!']
+postfixes = ['\'s', '\'ve', '\'d', '\'m', '\'re', '\'ll', ',', '.', '?', '!']
 
 def get_tags(lex):
   return known_tags[lex] if lex in known_tags else guess_tags(lex)
@@ -19,7 +19,7 @@ add_tok(Conjunction('and'))
 add_tok(Conjunction('or'))
 
 add_tok(Possessive('\'s'))
-add_tok(PrepositionMod('of', {CAT: NP}, {CAT: DP}))
+add_tok(PrepositionMod('of', {CAT: NP}))
 add_tok(Determiner('the', [SING, PLUR]))
 add_tok(Determiner('a', SING))
 add_tok(Determiner('an', SING))
@@ -104,17 +104,17 @@ add_tok(Verb('\'s', PRES, nom_subj_pat(THIRD, SING), have_aux_arg_pats))
 add_tok(Verb('had', PRET, nom_subj_pat_any, have_aux_arg_pats))
 add_tok(Verb('\'d', PRET, nom_subj_pat_any, have_aux_arg_pats))
 
-inf_arg_pat = {CAT: PP, LEX: 'to', ARG_CAT: VP}
-add_tok(PrepositionArg('to', {CAT: VP, FORM: BARE, HAS_SUBJ: False}))
-add_tok(PrepositionArg('to', {CAT: DP}))
+inf_arg_pat = {CAT: CP, LEX: 'to'}
+add_tok(Complementizer('to', {CAT: VP, FORM: BARE, HAS_SUBJ: False}))
 
 # Modals
-modal_arg_pats= [{CAT: VP, FORM: BARE, HAS_SUBJ: False}]
+modal_arg_pats = [{CAT: VP, FORM: BARE, HAS_SUBJ: False}]
 add_tok(Verb('can', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(Verb('could', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(Verb('shall', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(Verb('should', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(Verb('will', MODAL, nom_subj_pat_any, modal_arg_pats))
+add_tok(Verb('\'ll', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(Verb('would', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(Verb('may', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(Verb('might', MODAL, nom_subj_pat_any, modal_arg_pats))
@@ -124,6 +124,7 @@ add_tok(VerbInter('could', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(VerbInter('shall', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(VerbInter('should', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(VerbInter('will', MODAL, nom_subj_pat_any, modal_arg_pats))
+add_tok(VerbInter('\'ll', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(VerbInter('would', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(VerbInter('may', MODAL, nom_subj_pat_any, modal_arg_pats))
 add_tok(VerbInter('might', MODAL, nom_subj_pat_any, modal_arg_pats))
@@ -139,3 +140,16 @@ dp_arg_pat = {CAT: DP, CASE: ACC}
 add_tok(Verb('do', PRES, [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], [dp_arg_pat]))
 add_tok(Verb('does', PRES, nom_subj_pat(THIRD, SING), [dp_arg_pat]))
 add_tok(Verb('did', PRET, nom_subj_pat_any, [dp_arg_pat]))
+add_tok(Verb('done', PART, nom_subj_pat_any, [dp_arg_pat]))
+add_tok(Verb('doing', GERUND, nom_subj_pat_any, [dp_arg_pat]))
+
+dest_arg_pat = {CAT: PP, LEX: 'to'}
+add_tok(Verb('go', PRES, [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], [dest_arg_pat]))
+add_tok(Verb('goes', PRES, nom_subj_pat(THIRD, SING), [dest_arg_pat]))
+add_tok(Verb('went', PRET, nom_subj_pat_any, [dest_arg_pat]))
+add_tok(Verb('gone', PART, nom_subj_pat_any, [dest_arg_pat]))
+add_tok(Verb('going', GERUND, nom_subj_pat_any, [dest_arg_pat]))
+
+add_tok(PrepositionMod('with', {CAT: VP}))
+add_tok(PrepositionMod('by', {CAT: VP, FORM: PART}))
+add_tok(Preposition('to'))
