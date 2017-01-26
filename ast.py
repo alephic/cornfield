@@ -1,0 +1,3 @@
+
+class Proposition:
+    pass
