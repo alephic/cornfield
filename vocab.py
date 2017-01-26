@@ -105,7 +105,7 @@ add_tok(Verb('had', PRET, nom_subj_pat_any, have_aux_arg_pats))
 add_tok(Verb('\'d', PRET, nom_subj_pat_any, have_aux_arg_pats))
 
 inf_arg_pat = {CAT: CP, LEX: 'to'}
-add_tok(Complementizer('to', {CAT: VP, FORM: BARE, HAS_SUBJ: False}))
+add_tok(Complementizer('to', {FORM: BARE, HAS_SUBJ: False}))
 
 # Modals
 modal_arg_pats = [{CAT: VP, FORM: BARE, HAS_SUBJ: False}]
@@ -149,6 +149,7 @@ add_tok(Verb('goes', PRES, nom_subj_pat(THIRD, SING), [dest_arg_pat]))
 add_tok(Verb('went', PRET, nom_subj_pat_any, [dest_arg_pat]))
 add_tok(Verb('gone', PART, nom_subj_pat_any, [dest_arg_pat]))
 add_tok(Verb('going', GERUND, nom_subj_pat_any, [dest_arg_pat]))
+add_tok(Verb('going', GERUND, nom_subj_pat_any, [inf_arg_pat]))
 
 add_tok(PrepositionMod('with', {CAT: VP}))
 add_tok(PrepositionMod('by', {CAT: VP, FORM: PART}))
