@@ -107,6 +107,8 @@ add_tok(Verb('\'d', PRET, nom_subj_pat_any, have_aux_arg_pats))
 inf_arg_pat = {CAT: CP, LEX: 'to'}
 add_tok(Complementizer('to', {FORM: BARE, HAS_SUBJ: False}))
 
+add_tok(Complementizer('that', {FORM: [PRES, PRET, MODAL], HAS_SUBJ: True}))
+
 # Modals
 modal_arg_pats = [{CAT: VP, FORM: BARE, HAS_SUBJ: False}]
 add_tok(Verb('can', MODAL, nom_subj_pat_any, modal_arg_pats))
