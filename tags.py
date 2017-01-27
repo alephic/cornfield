@@ -186,7 +186,7 @@ def get_verb_rlam(arg_pats):
   def verb_rlam(vp, other):
     if pat_matches(arg_pats[0], other):
       if len(arg_pats) == 1:
-        return ArgR(vp, other, feats={CAT: VP}, rlam=get_verb_rlam(arg_pats[1:]), llam=vp.llam)
+        return ArgR(vp, other, feats={CAT: VP}, llam=vp.llam)
       return ArgR(vp, other, rlam=get_verb_rlam(arg_pats[1:]), llam=vp.llam)
   return verb_rlam
 
