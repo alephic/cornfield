@@ -38,7 +38,6 @@ CAT = Feat("CAT")
 NP = Feat("NP")
 DP = Feat("DP")
 V = Feat("V")
-VB = Feat("VB")
 VP = Feat("VP")
 TP = Feat("TP")
 CP = Feat("CP")
@@ -186,7 +185,9 @@ def get_verb_rlam(arg_pats):
     return no_lam
   def verb_rlam(vp, other):
     if pat_matches(arg_pats[0], other):
-      return ArgR(vp, other, feats={CAT: VP if len(arg_pats) == 1 else VB}, rlam=get_verb_rlam(arg_pats[1:]), llam=vp.llam)
+      if len(arg_pats) == 1:
+        return ArgR(vp, other, feats={CAT: VP}, rlam=get_verb_rlam(arg_pats[1:]), llam=vp.llam)
+      return ArgR(vp, other, rlam=get_verb_rlam(arg_pats[1:]), llam=vp.llam)
   return verb_rlam
 
 def get_verb_llam(subj_pat):
