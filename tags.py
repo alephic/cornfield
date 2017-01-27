@@ -264,7 +264,7 @@ class Preposition(FeatToken):
 
 def get_comp_rlam(arg_pat):
   def comp_rlam(comp, other):
-    if pat_matches(arg_pat, other):
+    if pat_matches(arg_pat, other) and matches(VP, other[CAT]):
       return ArgR(comp, other, feats={CAT: CP})
   return comp_rlam
 
