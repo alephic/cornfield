@@ -53,6 +53,7 @@ ANY = Feat("ANY")
 HAS_SUBJ = Feat("HAS_SUBJ")
 LEX = Feat("LEX")
 ARG_CAT = Feat("ARG_CAT")
+LOC = Feat("LOC")
 
 # Moods
 MOOD = Feat("MOOD")
