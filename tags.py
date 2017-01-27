@@ -238,6 +238,7 @@ def get_verb_aux_inter_rlam(subj_pat, arg_pat):
   def verb_aux_inter_rlam(v_aux, other):
     if pat_matches(subj_pat, other):
       return ArgR(v_aux, other, rlam=get_verb_aux_rlam(other, arg_pat), feats={HAS_SUBJ: True})
+  return verb_aux_inter_rlam
 
 def nom_subj_pat(person, count):
   return {CAT: DP, CASE: NOM, PERSON: person, COUNT: count}
