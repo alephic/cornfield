@@ -205,16 +205,19 @@ def get_verb_pass_rlam(subj):
       res = other.rlam(FeatAltToken(subj, feats={CASE: ACC}))
       if res:
         return ArgR(v_pass, other, rlam=res.rlam)
+  return verb_pass_rlam
 
 def get_verb_pass_llam(subj_pat):
   def verb_pass_llam(v_pass, other):
     if pat_matches(subj_pat, other):
       return ArgL(v_pass, other, rlam=get_verb_pass_rlam(other), feats={HAS_SUBJ: True})
+  return verb_pass_llam
 
 def get_verb_pass_inter_rlam(subj_pat):
   def verb_pass_inter_rlam(v_pass, other):
     if pat_matches(subj_pat, other):
       return ArgR(v_pass, other, rlam=get_verb_pass_rlam(other), feats={HAS_SUBJ: True})
+  return verb_pass_inter_rlam
 
 def nom_subj_pat(person, count):
   return {CAT: DP, CASE: NOM, PERSON: person, COUNT: count}
