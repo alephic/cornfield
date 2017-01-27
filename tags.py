@@ -205,7 +205,7 @@ def get_verb_pass_rlam(subj):
     if pat_matches({CAT: V, FORM: PART, HAS_SUBJ: False}, other):
       res = other.rlam(other, FeatAltToken(subj, feats={CASE: ACC}))
       if res:
-        return ArgR(v_pass, other, rlam=res.rlam)
+        return ArgR(v_pass, other, feats=res.feats, rlam=res.rlam)
   return verb_pass_rlam
 
 def get_verb_pass_llam(subj_pat):
@@ -225,7 +225,7 @@ def get_verb_aux_rlam(subj, arg_pat):
     if pat_matches({CAT: V, HAS_SUBJ: False}, other) and pat_matches(arg_pat, other):
       res = other.llam(other, subj)
       if res:
-        return ArgR(v_aux, other, rlam=res.rlam)
+        return ArgR(v_aux, other, feats=res.feats, rlam=res.rlam)
   return verb_aux_rlam
 
 def get_verb_aux_llam(subj_pat, arg_pat):
