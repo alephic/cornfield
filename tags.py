@@ -31,6 +31,7 @@ PRES = Feat("PRES")
 PART = Feat("PART")
 GERUND = Feat("GERUND")
 MODAL = Feat("MODAL")
+INF = Feat("INF")
 
 # Span labels
 CAT = Feat("CAT")
@@ -202,7 +203,7 @@ def get_verb_inter_rlam(subj_pat, arg_pats):
 def get_verb_pass_rlam(subj):
   def verb_pass_rlam(v_pass, other):
     if pat_matches({CAT: V, FORM: PART, HAS_SUBJ: False}, other):
-      res = other.rlam(FeatAltToken(subj, feats={CASE: ACC}))
+      res = other.rlam(other, FeatAltToken(subj, feats={CASE: ACC}))
       if res:
         return ArgR(v_pass, other, rlam=res.rlam)
   return verb_pass_rlam
@@ -218,6 +219,25 @@ def get_verb_pass_inter_rlam(subj_pat):
     if pat_matches(subj_pat, other):
       return ArgR(v_pass, other, rlam=get_verb_pass_rlam(other), feats={HAS_SUBJ: True})
   return verb_pass_inter_rlam
+
+def get_verb_aux_rlam(subj, arg_pat):
+  def verb_aux_rlam(v_aux, other):
+    if pat_matches({CAT: V, HAS_SUBJ: False}, other) and pat_matches(arg_pat, other):
+      res = other.llam(other, subj)
+      if res:
+        return ArgR(v_aux, other, rlam=res.rlam)
+  return verb_aux_rlam
+
+def get_verb_aux_llam(subj_pat, arg_pat):
+  def verb_aux_llam(v_aux, other):
+    if pat_matches(subj_pat, other):
+      return ArgL(v_aux, other, rlam=get_verb_aux_rlam(other, arg_pat), feats={HAS_SUBJ: True})
+  return verb_aux_llam
+
+def get_verb_aux_inter_rlam(subj_pat_arg_pat):
+  def verb_aux_inter_rlam(v_aux, other):
+    if pat_matches(subj_pat, other):
+      return ArgR(v_aux, other, rlam=get_verb_aux_rlam(other, arg_pat), feats={HAS_SUBJ: True})
 
 def nom_subj_pat(person, count):
   return {CAT: DP, CASE: NOM, PERSON: person, COUNT: count}
@@ -237,7 +257,15 @@ class VerbPass(FeatToken):
 
 class VerbPassInter(FeatToken):
   def __init__(self, lex, form, subj_pat):
-    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False}, rlam=get_verb_pass_inter_rlam(subj_pat))
+    super().__init__(lex, {FORM: form, MOOD: INTER, CAT: V, HAS_SUBJ: False}, rlam=get_verb_pass_inter_rlam(subj_pat))
+
+class VerbAux(FeatToken):
+  def __init__(self, lex, form, subj_pat, arg_pat):
+    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False}, llam=get_verb_aux_llam(subj_pat, arg_pat))
+
+class VerbAuxInter(FeatToken):
+  def __init__(self, lex, form, subj_pat, arg_pat):
+    super().__init__(lex, {FORM: form, MOOD: INTER, CAT: V, HAS_SUBJ: False}, rlam=get_verb_aux_inter_rlam(subj_pat, arg_pat))
 
 class Noun(FeatToken):
   def __init__(self, lex, count):
