@@ -73,6 +73,7 @@ copula_arg_pats_base = [
 copula_arg_pats_sing = [[{CAT: DP, CASE: ACC, COUNT: SING}]+copula_arg_pats_base]
 copula_arg_pats_plur = [[{CAT: DP, CASE: ACC, COUNT: PLUR}]+copula_arg_pats_base]
 copula_arg_pats_any = [[{CAT: DP, CASE: ACC, COUNT: ANY}]+copula_arg_pats_base]
+# Copular verb
 add_tok(Verb('am', PRES, nom_subj_pat(FIRST, SING), copula_arg_pats_sing))
 add_tok(Verb('\'m', PRES, nom_subj_pat(FIRST, SING), copula_arg_pats_sing))
 add_tok(Verb('are', PRES, nom_subj_pat(ANY, PLUR), copula_arg_pats_any))
@@ -95,6 +96,30 @@ add_tok(VerbInter('were', PRET, nom_subj_pat(SECOND, PLUR), copula_arg_pats_any)
 add_tok(Verb('been', PART, nom_subj_pat_any, copula_arg_pats_any))
 add_tok(Verb('being', GERUND, nom_subj_pat_any, copula_arg_pats_any))
 add_tok(Verb('be', BARE, nom_subj_pat_any, copula_arg_pats_any))
+
+# Passive verb
+add_tok(VerbPass('am', PRES, nom_subj_pat(FIRST, SING)))
+add_tok(VerbPass('\'m', PRES, nom_subj_pat(FIRST, SING)))
+add_tok(VerbPass('are', PRES, nom_subj_pat(ANY, PLUR)))
+add_tok(VerbPass('\'re', PRES, nom_subj_pat(ANY, PLUR)))
+add_tok(VerbPass('are', PRES, nom_subj_pat(SECOND, SING)))
+add_tok(VerbPass('is', PRES, nom_subj_pat(THIRD, SING)))
+add_tok(VerbPass('\'s', PRES, nom_subj_pat(THIRD, SING)))
+add_tok(VerbPass('was', PRET, nom_subj_pat([FIRST, THIRD], SING)))
+add_tok(VerbPass('were', PRET, nom_subj_pat(SECOND, SING)))
+add_tok(VerbPass('were', PRET, nom_subj_pat(ANY, PLUR)))
+add_tok(VerbPassInter('am', PRES, nom_subj_pat(FIRST, SING)))
+add_tok(VerbPassInter('\'m', PRES, nom_subj_pat(FIRST, SING)))
+add_tok(VerbPassInter('are', PRES, nom_subj_pat(ANY, PLUR)))
+add_tok(VerbPassInter('\'re', PRES, nom_subj_pat(ANY, PLUR)))
+add_tok(VerbPassInter('are', PRES, nom_subj_pat(SECOND, SING)))
+add_tok(VerbPassInter('is', PRES, nom_subj_pat(THIRD, SING)))
+add_tok(VerbPassInter('was', PRET, nom_subj_pat([FIRST, THIRD], SING)))
+add_tok(VerbPassInter('were', PRET, nom_subj_pat(SECOND, SING)))
+add_tok(VerbPassInter('were', PRET, nom_subj_pat(SECOND, PLUR)))
+add_tok(VerbPass('been', PART, nom_subj_pat_any))
+add_tok(VerbPass('being', GERUND, nom_subj_pat_any))
+add_tok(VerbPass('be', BARE, nom_subj_pat_any))
 
 have_aux_arg_pats = [{CAT: VP, FORM: PART, HAS_SUBJ: False}]
 add_tok(Verb('have', [PRES, BARE], nom_subj_pat_any, have_aux_arg_pats))
