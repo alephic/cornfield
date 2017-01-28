@@ -249,7 +249,7 @@ class VerbInter(FeatToken):
 
 class VerbPass(FeatToken):
   def __init__(self, lex, form, subj_pat):
-    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False}, llam=get_verb_pass_llam(subj_pat))
+    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False}, rlam=verb_pass_rlam, llam=get_verb_llam(subj_pat))
 
 class VerbPassInter(FeatToken):
   def __init__(self, lex, form, subj_pat):
@@ -257,7 +257,7 @@ class VerbPassInter(FeatToken):
 
 class VerbAux(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pat):
-    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False}, llam=get_verb_aux_llam(subj_pat, arg_pat))
+    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False}, rlam=get_verb_aux_rlam(subj_pat), llam=get_verb_llam(subj_pat))
 
 class VerbAuxInter(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pat):
