@@ -104,6 +104,15 @@ class Token:
   def __repr__(self):
     return self.lex
 
+class Gap(Token):
+  def __init__(self):
+    self.lex = "*"
+    self.rlam = no_lam
+    self.llam = no_lam
+  def __getitem__(self, item):
+    return ANY
+GAP = Gap()
+
 class FeatToken(Token):
   def __init__(self, lex, feats, rlam=no_lam, llam=no_lam):
     super().__init__(lex, rlam=rlam, llam=llam)
@@ -202,44 +211,28 @@ def get_verb_inter_rlam(subj_pat, arg_pats):
       return ArgR(vp, other, rlam=get_verb_rlam(arg_pats), feats={HAS_SUBJ:True})
   return verb_rlam
 
-def get_verb_pass_rlam(subj):
-  def verb_pass_rlam(v_pass, other):
-    if pat_matches({CAT: V, FORM: PART, HAS_SUBJ: False}, other):
-      res = other.rlam(other, FeatAltToken(subj, feats={CASE: ACC}))
-      if res:
-        return ArgR(v_pass, other, feats=res.feats, rlam=res.rlam)
-  return verb_pass_rlam
-
-def get_verb_pass_llam(subj_pat):
-  def verb_pass_llam(v_pass, other):
-    if pat_matches(subj_pat, other):
-      return ArgL(v_pass, other, rlam=get_verb_pass_rlam(other), feats={HAS_SUBJ: True})
-  return verb_pass_llam
+def verb_pass_rlam(v_pass, other):
+  if pat_matches({CAT: V, FORM: PART, HAS_SUBJ: False}, other):
+    res = other.rlam(other, GAP)
+    if res:
+      return ArgR(v_pass, other, feats=res.feats, llam=v_pass.llam, rlam=res.rlam)
 
 def get_verb_pass_inter_rlam(subj_pat):
   def verb_pass_inter_rlam(v_pass, other):
     if pat_matches(subj_pat, other):
-      return ArgR(v_pass, other, rlam=get_verb_pass_rlam(other), feats={HAS_SUBJ: True})
+      return ArgR(v_pass, other, rlam=verb_pass_rlam, feats={HAS_SUBJ: True})
   return verb_pass_inter_rlam
 
-def get_verb_aux_rlam(subj, arg_pat):
+def get_verb_aux_rlam(arg_pat):
   def verb_aux_rlam(v_aux, other):
     if pat_matches({CAT: V, HAS_SUBJ: False}, other) and pat_matches(arg_pat, other):
-      res = other.llam(other, subj)
-      if res:
-        return ArgR(v_aux, other, feats=res.feats, rlam=res.rlam)
+      return ArgR(v_aux, other, feats=res.feats, llam=v_aux.llam, rlam=res.rlam)
   return verb_aux_rlam
-
-def get_verb_aux_llam(subj_pat, arg_pat):
-  def verb_aux_llam(v_aux, other):
-    if pat_matches(subj_pat, other):
-      return ArgL(v_aux, other, rlam=get_verb_aux_rlam(other, arg_pat), feats={HAS_SUBJ: True})
-  return verb_aux_llam
 
 def get_verb_aux_inter_rlam(subj_pat, arg_pat):
   def verb_aux_inter_rlam(v_aux, other):
     if pat_matches(subj_pat, other):
-      return ArgR(v_aux, other, rlam=get_verb_aux_rlam(other, arg_pat), feats={HAS_SUBJ: True})
+      return ArgR(v_aux, other, rlam=get_verb_aux_rlam(arg_pat), feats={HAS_SUBJ: True})
   return verb_aux_inter_rlam
 
 def nom_subj_pat(person, count):
