@@ -66,7 +66,7 @@ add_tok(Determiner('this', SING))
 add_tok(FeatToken('these', {CAT: DP, CASE: ANY, COUNT: PLUR, PERSON: THIRD}))
 add_tok(Determiner('these', PLUR))
 
-add_tok(FeatToken('there', {CAT: DP, CASE: ANY, COUNT: SING, PERSON: THIRD, LOC: True}))
+add_tok(FeatToken('there', {CAT: DP, CASE: ACC, COUNT: SING, PERSON: THIRD, LOC: True}))
 
 copula_arg_pats_base = [
   {CAT: [Adj, PP]}
@@ -212,7 +212,7 @@ add_tok(Verb('did', PRET, nom_subj_pat_any, [dp_arg_pat]))
 add_tok(Verb('done', PART, nom_subj_pat_any, [dp_arg_pat]))
 add_tok(Verb('doing', GERUND, nom_subj_pat_any, [dp_arg_pat]))
 
-dest_arg_pat = [{CAT: PP, LEX: 'to'}, {CAT: DP, LOC: True}]
+dest_arg_pat = [{CAT: PP, LEX: 'to'}, {CAT: DP, CASE: ACC, LOC: True}]
 add_tok(Verb('go', PRES, [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], [dest_arg_pat]))
 add_tok(Verb('goes', PRES, nom_subj_pat(THIRD, SING), [dest_arg_pat]))
 add_tok(Verb('went', PRET, nom_subj_pat_any, [dest_arg_pat]))

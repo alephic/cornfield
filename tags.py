@@ -226,9 +226,7 @@ def get_verb_pass_inter_rlam(subj_pat):
 def get_verb_aux_rlam(arg_pat):
   def verb_aux_rlam(v_aux, other):
     if pat_matches({CAT: V, HAS_SUBJ: False}, other) and pat_matches(arg_pat, other):
-      res = other.rlam(other, GAP)
-      if res:
-        return ArgR(v_aux, other, feats=res.feats, llam=v_aux.llam, rlam=res.rlam)
+      return ArgR(v_aux, other, llam=v_aux.llam, rlam=other.rlam)
   return verb_aux_rlam
 
 def get_verb_aux_inter_rlam(subj_pat, arg_pat):
