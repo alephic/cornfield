@@ -218,31 +218,25 @@ add_tok(Verb('goes', PRES, nom_subj_pat(THIRD, SING), [dest_arg_pat]))
 add_tok(Verb('went', PRET, nom_subj_pat_any, [dest_arg_pat]))
 add_tok(Verb('gone', PART, nom_subj_pat_any, [dest_arg_pat]))
 add_tok(Verb('going', GERUND, nom_subj_pat_any, [dest_arg_pat]))
+
+# Informal future
 add_tok(VerbAux('going', GERUND, nom_subj_pat_any, inf_arg_pat))
 add_tok(VerbAux('gonna', GERUND, nom_subj_pat_any, {FORM: BARE}))
+# Repetitive past
+add_tok(VerbAux('used', PRET, nom_subj_pat_any, inf_arg_pat))
 
-# Want object
-add_tok(Verb('want', [PRES, BARE], [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], [dp_arg_pat]))
-add_tok(Verb('wants', PRES, nom_subj_pat(THIRD, SING), [dp_arg_pat]))
-add_tok(Verb('wanted', [PRET, PART], nom_subj_pat_any, [dp_arg_pat]))
-add_tok(Verb('wanting', GERUND, nom_subj_pat_any, [dp_arg_pat]))
-# Want action
-add_tok(VerbAux('want', [PRES, BARE], [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], inf_arg_pat))
-add_tok(VerbAux('wants', PRES, nom_subj_pat(THIRD, SING), inf_arg_pat))
-add_tok(VerbAux('wanted', [PRET, PART], nom_subj_pat_any, inf_arg_pat))
-add_tok(VerbAux('wanting', GERUND, nom_subj_pat_any, inf_arg_pat))
+req_arg_pat = [dp_arg_pat, {CAT: VP, FORM: INF}]
+# Want
+add_tok(Verb('want', [PRES, BARE], [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], [req_arg_pat]))
+add_tok(Verb('wants', PRES, nom_subj_pat(THIRD, SING), [req_arg_pat]))
+add_tok(Verb('wanted', [PRET, PART], nom_subj_pat_any, [req_arg_pat]))
+add_tok(Verb('wanting', GERUND, nom_subj_pat_any, [req_arg_pat]))
 add_tok(VerbAux('wanna', [PRES, BARE], [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], {FORM: BARE}))
-
-# Need object
-add_tok(Verb('need', [PRES, BARE], [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], [dp_arg_pat]))
-add_tok(Verb('needs', PRES, nom_subj_pat(THIRD, SING), [dp_arg_pat]))
-add_tok(Verb('needed', [PRET, PART], nom_subj_pat_any, [dp_arg_pat]))
-add_tok(Verb('needing', GERUND, nom_subj_pat_any, [dp_arg_pat]))
-# Need action
-add_tok(VerbAux('need', [PRES, BARE], [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], inf_arg_pat))
-add_tok(VerbAux('needs', PRES, nom_subj_pat(THIRD, SING), inf_arg_pat))
-add_tok(VerbAux('needed', [PRET, PART], nom_subj_pat_any, inf_arg_pat))
-add_tok(VerbAux('needing', GERUND, nom_subj_pat_any, inf_arg_pat))
+# Need
+add_tok(Verb('need', [PRES, BARE], [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], [req_arg_pat]))
+add_tok(Verb('needs', PRES, nom_subj_pat(THIRD, SING), [req_arg_pat]))
+add_tok(Verb('needed', [PRET, PART], nom_subj_pat_any, [req_arg_pat]))
+add_tok(Verb('needing', GERUND, nom_subj_pat_any, [req_arg_pat]))
 
 add_tok(PrepositionMod('with', {CAT: VP}))
 add_tok(PrepositionMod('by', {CAT: VP, FORM: PART}))
