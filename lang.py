@@ -27,8 +27,8 @@ def parse_tokens(tokenss):
 def tokenize(text):
   words = pos_tag(word_tokenize(text))
   tokenss = [[]]
-  for (word, tag) in words:
-    tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word, pos)]
+  for (word, pos) in words:
+    tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word.lower(), pos)]
   return tokenss
 
 def parse_text(text):

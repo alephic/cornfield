@@ -14,11 +14,11 @@ def guess_tags(lex, pos):
   if pos == 'NN':
     return [Noun(lex, SING)]
   elif pos == 'NNS':
-    return [Noun(lex, PLUR), FeatToken(lex, {CAT: DP, COUNT: PLUR, PERSON: THIRD})]
+    return [Noun(lex, PLUR), FeatToken(lex, {CAT: DP, CASE: ANY, COUNT: PLUR, PERSON: THIRD})]
   elif pos == 'NNP':
-    return [FeatToken(lex, {CAT: DP, COUNT: SING, PERSON: THIRD})]
+    return [FeatToken(lex, {CAT: DP, CASE: ANY, COUNT: SING, PERSON: THIRD})]
   elif pos == 'NNPS':
-    return [FeatToken(lex, {CAT: DP, COUNT: PLUR, PERSON: THIRD})]
+    return [FeatToken(lex, {CAT: DP, CASE: ANY, COUNT: PLUR, PERSON: THIRD})]
   elif pos == 'JJ':
     return [Adj(lex)]
   elif pos == 'RB':
@@ -35,6 +35,8 @@ def guess_tags(lex, pos):
     return [Verb(lex, PART, nom_subj_pat_any, [dp_arg_pat])]
   elif pos == 'VBG':
     return [Verb(lex, GERUND, nom_subj_pat_any, [dp_arg_pat])]
+  else:
+    return []
 
 
 def add_tok(tok):
@@ -91,7 +93,10 @@ add_tok(Determiner('this', SING))
 add_tok(FeatToken('these', {CAT: DP, CASE: ANY, COUNT: PLUR, PERSON: THIRD}))
 add_tok(Determiner('these', PLUR))
 
-add_tok(FeatToken('there', {CAT: DP, CASE: ACC, COUNT: SING, PERSON: THIRD, LOC: True}))
+add_tok(FeatToken('there', {CAT: DP, CASE: ANY, COUNT: SING, PERSON: THIRD, LOC: True}))
+
+add_tok(FeatToken('something', {CAT: DP, CASE: ANY, COUNT:SING, PERSON: THIRD}))
+add_tok(FeatToken('somewhere', {CAT: DP, CASE: ANY, COUNT:SING, PERSON: THIRD, LOC: True}))
 
 copula_arg_pats_base = [
   {CAT: [Adj, PP]}
@@ -240,7 +245,7 @@ add_tok(Verb('done', PART, nom_subj_pat_any, [dp_arg_pat]))
 add_tok(Verb('doing', GERUND, nom_subj_pat_any, [dp_arg_pat]))
 
 dest_arg_pat = [{CAT: PP, LEX: 'to'}, {CAT: DP, CASE: ACC, LOC: True}]
-add_tok(Verb('go', PRES, [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], [dest_arg_pat]))
+add_tok(Verb('go', [PRES, BARE], [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], [dest_arg_pat]))
 add_tok(Verb('goes', PRES, nom_subj_pat(THIRD, SING), [dest_arg_pat]))
 add_tok(Verb('went', PRET, nom_subj_pat_any, [dest_arg_pat]))
 add_tok(Verb('gone', PART, nom_subj_pat_any, [dest_arg_pat]))
