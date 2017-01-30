@@ -2,15 +2,40 @@ from util import multidict_add
 from tags import *
 
 known_tags = {}
-postfixes = ['\'s', '\'ve', '\'d', '\'m', '\'re', '\'ll', ',', '.', '?', '!']
+postfixes = ['\'s', '\'ve', '\'d', '\'m', '\'re', '\'ll', 'n\'t', ',', '.', '?', '!']
 
-def get_tags(lex):
-  return known_tags[lex] if lex in known_tags else guess_tags(lex)
+def get_tags(lex, pos):
+  if lex in known_tags:
+    return known_tags[lex]
+  else:
+    return guess_tags(lex, pos)
 
-def guess_tags(lex):
-  if lex.endswith('ly'):
-    return [Adverb(lex)]
-  return [Noun(lex, PLUR if lex.endswith('s') else SING), PosAdjective(lex)]
+def guess_tags(lex, pos):
+  if pos == 'NN':
+    return [Noun(lex, SING)]
+  elif pos == 'NNS':
+    return [Noun(lex, PLUR), FeatToken(lex, {CAT: DP, COUNT: PLUR, PERSON: THIRD})]
+  elif pos == 'NNP':
+    return [FeatToken(lex, {CAT: DP, COUNT: SING, PERSON: THIRD})]
+  elif pos == 'NNPS':
+    return [FeatToken(lex, {CAT: DP, COUNT: PLUR, PERSON: THIRD})]
+  elif pos == 'JJ':
+    return [Adj(lex)]
+  elif pos == 'RB':
+    return [Adv(lex)]
+  elif pos == 'VB':
+    return [Verb(lex, BARE, nom_subj_pat_any, [dp_arg_pat])]
+  elif pos == 'VBP':
+    return [Verb(lex, PRES, [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)], [dp_arg_pat])]
+  elif pos == 'VBZ':
+    return [Verb(lex, PRES, nom_subj_pat(THIRD, SING), [dp_arg_pat])]
+  elif pos == 'VBD':
+    return [Verb(lex, PRET, nom_subj_pat_any, [dp_arg_pat])]
+  elif pos == 'VBN':
+    return [Verb(lex, PART, nom_subj_pat_any, [dp_arg_pat])]
+  elif pos == 'VBG':
+    return [Verb(lex, GERUND, nom_subj_pat_any, [dp_arg_pat])]
+
 
 def add_tok(tok):
   multidict_add(known_tags, tok.lex, tok)
@@ -179,6 +204,7 @@ add_tok(Complementizer('that', {FORM: [PRES, PRET, MODAL], HAS_SUBJ: True}))
 # Modals
 modal_arg_pat = {FORM: BARE}
 add_tok(VerbAux('can', MODAL, nom_subj_pat_any, modal_arg_pat))
+add_tok(VerbAux('ca', MODAL, nom_subj_pat_any, modal_arg_pat))
 add_tok(VerbAux('could', MODAL, nom_subj_pat_any, modal_arg_pat))
 add_tok(VerbAux('shall', MODAL, nom_subj_pat_any, modal_arg_pat))
 add_tok(VerbAux('should', MODAL, nom_subj_pat_any, modal_arg_pat))
@@ -189,6 +215,7 @@ add_tok(VerbAux('may', MODAL, nom_subj_pat_any, modal_arg_pat))
 add_tok(VerbAux('might', MODAL, nom_subj_pat_any, modal_arg_pat))
 add_tok(VerbAux('must', MODAL, nom_subj_pat_any, modal_arg_pat))
 add_tok(VerbAuxInter('can', MODAL, nom_subj_pat_any, modal_arg_pat))
+add_tok(VerbAuxInter('ca', MODAL, nom_subj_pat_any, modal_arg_pat))
 add_tok(VerbAuxInter('could', MODAL, nom_subj_pat_any, modal_arg_pat))
 add_tok(VerbAuxInter('shall', MODAL, nom_subj_pat_any, modal_arg_pat))
 add_tok(VerbAuxInter('should', MODAL, nom_subj_pat_any, modal_arg_pat))
