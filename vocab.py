@@ -4,7 +4,7 @@ from tags import *
 known_tags = {}
 postfixes = ['\'s', '\'ve', '\'d', '\'m', '\'re', '\'ll', 'n\'t', ',', '.', '?', '!']
 
-def get_tags(lex, pos):
+def get_tags(lex):
   if lex in known_tags:
     return known_tags[lex]
   else:
@@ -20,9 +20,9 @@ def guess_tags(lex, pos):
   elif pos == 'NNPS':
     return [FeatToken(lex, {CAT: DP, CASE: ANY, COUNT: PLUR, PERSON: THIRD})]
   elif pos == 'JJ':
-    return [Adj(lex)]
+    return [PosAdjective(lex)]
   elif pos == 'RB':
-    return [Adv(lex)]
+    return [Adverb(lex)]
   elif pos == 'VB':
     return [Verb(lex, BARE, nom_subj_pat_any, [dp_arg_pat])]
   elif pos == 'VBP':

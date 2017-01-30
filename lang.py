@@ -1,6 +1,5 @@
 from tags import *
 from vocab import *
-from nltk import word_tokenize, pos_tag
 
 def lam_apply(tok1, tok2):
   res = []
@@ -25,12 +24,26 @@ def parse_tokens(tokenss):
         fringe.append(curr[:i]+[y]+curr[i+2:])
 
 def tokenize(text):
-  words = pos_tag(word_tokenize(text))
+  res = []
+  for chunk in text.split(' '):
+    has_pf = False
+    for pf in postfixes:
+      if chunk.endswith(pf):
+        res.append(chunk[:-len(pf)])
+        res.append(pf)
+        has_pf = True
+        break
+    if not has_pf:
+      res.append(chunk)
+  return res
+
+def tag(text):
+  words = tokenize(text)
   tokenss = [[]]
-  for (word, pos) in words:
-    tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word.lower(), pos)]
+  for word in words:
+    tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word.lower())]
   return tokenss
 
 def parse_text(text):
-  tokenss = tokenize(text)
+  tokenss = tag(text)
   return parse_tokens(tokenss)
