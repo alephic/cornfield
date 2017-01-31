@@ -238,6 +238,8 @@ def get_verb_aux_inter_rlam(subj_pat, arg_pat):
 def nom_subj_pat(person, count):
   return {CAT: DP, CASE: NOM, PERSON: person, COUNT: count}
 nom_subj_pat_any = nom_subj_pat(ANY, ANY)
+nom_subj_pat_nontps = [nom_subj_pat([FIRST, SECOND], SING), nom_subj_pat(ANY, PLUR)]
+nom_subj_pat_tps = nom_subj_pat(THIRD, SING)
 
 class Verb(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pats):
