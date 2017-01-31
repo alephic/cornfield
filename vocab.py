@@ -70,7 +70,7 @@ def add_verb_default(lex, arg_pats):
   add_tok(Verb(lex, PRES, nom_subj_pat_nontps, arg_pats))
   add_tok(Verb(lex+'s', PRES, nom_subj_pat_tps, arg_pats))
   add_tok(Verb(lex+'d' if lex.endswith('e') else lex+'ed', [PRET, PART], nom_subj_pat_any, arg_pats))
-  add_tok(Verb(lex+'ing', GERUND, arg_pats))
+  add_tok(Verb(lex+'ing', GERUND, nom_subj_pat_any, arg_pats))
   
 add_tok(Conjunction('and'))
 add_tok(Conjunction('or'))
