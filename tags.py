@@ -234,7 +234,9 @@ def get_verb_rlam(arg_pats):
   return verb_rlam
 
 def verb_rel_llam(vp, other):
-  if 
+  res = vp.rlam(vp, other)
+  if res and matches(VP, res[CAT]):
+    return ModR(other, vp)
 
 def get_verb_llam(subj_pat):
   def verb_llam(vp, other):
