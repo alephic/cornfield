@@ -35,11 +35,13 @@ INF = Feat("INF")
 
 # Span labels
 CAT = Feat("CAT")
-NP = Feat("NP")
+N = Feat("N")
+D = Feat("D")
 DP = Feat("DP")
 V = Feat("V")
 VP = Feat("VP")
 TP = Feat("TP")
+C = Feat("C")
 CP = Feat("CP")
 Adj = Feat("Adj")
 Adv = Feat("Adv")
@@ -123,7 +125,7 @@ class FeatToken(Token):
     return self.feats[item] if item in self.feats else None
   def __repr__(self):
     if CAT in self.feats:
-      return repr(self.feats[CAT])+':'+self.lex
+      return repr(self.feats[CAT])+'.'+self.lex
     return self.lex
     
 class HeadedToken(Token):
@@ -153,13 +155,19 @@ class ArgR(Arg):
   def __str__(self):
     return str(self.head)+' '+str(self.arg)
   def __repr__(self):
-    return repr(self.head)+' ('+repr(self.arg)+')'
+    if CAT in self.feats:
+      return '[.'+repr(self.feats[CAT]+' '+repr(self.head)+' '+repr(self.arg)+']'
+    else:
+      return '['+repr(self.head)+' '+repr(self.arg)+']'
 
 class ArgL(Arg):
   def __str__(self):
     return str(self.arg)+' '+str(self.head)
   def __repr__(self):
-    return '('+repr(self.arg)+') '+repr(self.head)
+    if CAT in self.feats:
+      return '[.'+repr(self.feats[CAT]+' '+repr(self.arg)+' '+repr(self.head)+']'
+    else:
+      return '['+repr(self.arg)+' '+repr(self.head)+']'
     
 def mod_rlam(mod, other):
   res = mod.head.rlam(mod.head, other)
@@ -189,13 +197,13 @@ class ModR(Mod):
   def __str__(self):
     return str(self.head)+' '+str(self.mod)
   def __repr__(self):
-    return repr(self.head)+' ['+repr(self.mod)+']'
+    return '['+repr(self.head)+' '+repr(self.mod)+']'
 
 class ModL(Mod):
   def __str__(self):
     return str(self.mod)+' '+str(self.head)
   def __repr__(self):
-    return '['+repr(self.mod)+'] '+repr(self.head)
+    return '['+repr(self.mod)+' '+repr(self.head)+']'
 
 def get_verb_rlam(arg_pats):
   if len(arg_pats) == 0:
@@ -277,13 +285,13 @@ class VerbAuxInter(FeatToken):
 class Noun(FeatToken):
   def __init__(self, lex, count):
     if count == PLUR:
-      fs = {CAT: [NP, DP], COUNT: PLUR, CASE: ANY, PERSON: THIRD}
+      fs = {CAT: [N, DP], COUNT: PLUR, CASE: ANY, PERSON: THIRD}
     else:
-      fs = {CAT: NP, COUNT: SING}
+      fs = {CAT: N, COUNT: SING}
     super().__init__(lex, fs)
 
 def pos_adj_rlam(adj, other):
-  if matches(NP, other[CAT]):
+  if matches(N, other[CAT]):
     return ModL(other, adj)
 
 class PosAdjective(FeatToken):
@@ -291,7 +299,7 @@ class PosAdjective(FeatToken):
     super().__init__(lex, {CAT: Adj}, rlam=pos_adj_rlam)
 
 def det_rlam(det, other):
-  if pat_matches({CAT: NP, COUNT: det[COUNT]}, other):
+  if pat_matches({CAT: N, COUNT: det[COUNT]}, other):
     return ArgR(det, other, feats={CAT: DP, PERSON: THIRD, CASE: ANY})
 
 class Determiner(FeatToken):
@@ -318,12 +326,15 @@ class Adverb(FeatToken):
     super().__init__(lex, {CAT: Adv}, rlam=adv_rlam, llam=adv_llam)
 
 def get_prep_mod_rlam(head_pat):
-  def prep_llam(prep, other):
+  def pp_llam(pp, other):
     if pat_matches(head_pat, other):
-      return ModR(other, prep)
+      return ModR(other, pp)
+  def pp_rlam(pp, other):
+    if pat_matches(head_pat, other):
+      return ModL(other, pp)
   def prep_rlam(prep, other):
     if matches(DP, other[CAT]):
-      return ArgR(prep, other, feats={CAT: PP}, llam=prep_llam)
+      return ArgR(prep, other, feats={CAT: PP}, rlam=pp_rlam, llam=pp_llam)
   return prep_rlam
 
 class PrepositionMod(FeatToken):
@@ -344,9 +355,25 @@ def get_comp_rlam(arg_pat):
       return ArgR(comp, other, feats={CAT: CP})
   return comp_rlam
 
+def get_comp_mod_rlam(head_pat, arg_pat):
+  def cp_rlam(cp, other):
+    if pat_matches(head_pat, other):
+      return ModL(other, cp)
+  def cp_llam(cp, other):
+    if pat_matches(head_pat, other):
+      return ModR(other, cp)
+  def comp_rlam(comp, other):
+    if pat_matches(arg_pat, other) and matches(VP, other[CAT]):
+      return ArgR(comp, other, feats={CAT: CP}, rlam=cp_rlam, llam=cp_llam)
+  return comp_rlam
+
 class Complementizer(FeatToken):
   def __init__(self, lex, arg_pat):
-    super().__init__(lex, {LEX: lex}, rlam=get_comp_rlam(arg_pat))
+    super().__init__(lex, {CAT: C, LEX: lex}, rlam=get_comp_rlam(arg_pat))
+
+class ComplementizerMod(FeatToken):
+  def __init__(self, lex, head_pat, arg_pat):
+    super().__init__(lex, {CAT: C, LEX: lex}, rlam=get_comp_mod_rlam(head_pat, arg_pat))
 
 class ConjunctPhrase(Token):
   def __init__(self, lex, head_l, head_r):
@@ -356,7 +383,7 @@ class ConjunctPhrase(Token):
   def __str__(self):
     return str(self.head)+' '+self.lex+' '+str(self.head_r)
   def __repr__(self):
-    return '('+repr(self.head)+') &:'+self.lex+' ('+repr(self.head_r)+')'
+    return '[&P '+repr(self.head)+' &.'+self.lex+' '+repr(self.head_r)+']'
   def __getitem__(self, item):
     if matches(DP, self.head[CAT]) and item == COUNT:
       return PLUR
@@ -365,7 +392,7 @@ class ConjunctPhrase(Token):
 
 def conj_rlam(conj, other_r):
   if other_r[CAT]:
-    def conj_llam(conj, other_l):
+    def conj_llam(partial, other_l):
       if matches(other_r[CAT], other_l[CAT]):
         return ConjunctPhrase(conj.lex, other_l, other_r)
     return ArgR(conj, other_r, llam=conj_llam)

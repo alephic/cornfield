@@ -60,7 +60,7 @@ def guess_tags(lex, pos):
   elif pos == 'VBG':
     return [Verb(lex, GERUND, nom_subj_pat_any, [dp_arg_pat])]
   elif pos == 'IN':
-    return [PrepositionMod(lex, {CAT: VP})]
+    return [PrepositionMod(lex, {CAT: [VP, DP]}), ComplementizerMod(lex, {CAT: VP}, [{FORM: [PRET, PRES]}, {HAS_SUBJ: False, FORM: GERUND}])]
   else:
     return []
 
@@ -79,9 +79,11 @@ add_tok(Conjunction('or'))
 
 add_tok(Possessive('\'s'))
 add_tok(PrepositionMod('of', {CAT: NP}))
+
 add_tok(Determiner('the', [SING, PLUR]))
 add_tok(Determiner('a', SING))
 add_tok(Determiner('an', SING))
+
 add_tok(FeatToken('i', {CAT: DP, CASE: NOM, COUNT: SING, PERSON: FIRST}))
 add_tok(FeatToken('me', {CAT: DP, CASE: ACC, COUNT: SING, PERSON: FIRST}))
 add_tok(FeatToken('myself', {CAT: DP, CASE: ACC, COUNT: SING, PERSON: FIRST}))
@@ -300,10 +302,6 @@ add_tok(VerbAux('wanna', BARE, nom_subj_pat_any, {FORM: BARE}))
 # Need
 add_verb_default('need', req_arg_pats)
 
-add_tok(PrepositionMod('with', {CAT: VP}))
-add_tok(PrepositionMod('by', {CAT: VP, FORM: PART}))
-add_tok(Preposition('to'))
-
 # Become
 add_tok(Verb('become', BARE, nom_subj_pat_any, copula_arg_pats))
 add_tok(Verb('become', PRES, nom_subj_pat_nontps, copula_arg_pats))
@@ -311,3 +309,13 @@ add_tok(Verb('becomes', PRES, nom_subj_pat_tps, copula_arg_pats))
 add_tok(Verb('become', PART, nom_subj_pat_any, copula_arg_pats))
 add_tok(Verb('became', PRET, nom_subj_pat_any, copula_arg_pats))
 add_tok(Verb('becoming', GERUND, nom_subj_pat_any, copula_arg_pats))
+add_tok(VerbPass('become', BARE, nom_subj_pat_any))
+add_tok(VerbPass('become', PRES, nom_subj_pat_nontps))
+add_tok(VerbPass('becomes', PRES, nom_subj_pat_tps))
+add_tok(VerbPass('become', PART, nom_subj_pat_any))
+add_tok(VerbPass('became', PRET, nom_subj_pat_any))
+add_tok(VerbPass('becoming', GERUND, nom_subj_pat_any))
+
+add_tok(PrepositionMod('with', {CAT: VP}))
+add_tok(PrepositionMod('by', {CAT: VP, FORM: PART}))
+add_tok(Preposition('to'))
