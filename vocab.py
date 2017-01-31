@@ -1,14 +1,38 @@
 from util import multidict_add
 from tags import *
+import pos_tags
 
 known_tags = {}
 postfixes = ['\'s', '\'ve', '\'d', '\'m', '\'re', '\'ll', 'n\'t', ',', '.', '?', '!']
+
+known_pos = pos_tags.load_pos_tags('en-ud-tags.pkl')
+
+def morph_detect(lex):
+  if lex.endswith('ed'):
+    return ['VBD', 'VBN', 'JJ']
+  elif lex.endswith('ing'):
+    return ['VBG', 'JJ']
+  elif lex.endswith('s'):
+    return ['VBZ', 'NNS']
+  elif lex.endswith('ly'):
+    return ['RB']
+  else:
+    return ['VB', 'VBP', 'NN', 'NNP', 'JJ']
+
 
 def get_tags(lex):
   if lex in known_tags:
     return known_tags[lex]
   else:
-    return guess_tags(lex, pos)
+    poss = None
+    if lex in known_pos:
+      poss = known_pos[lex]
+    else:
+      poss = morph_detect(lex)
+    res = []
+    for pos in poss:
+      res.extend(guess_tags(lex, pos))
+    return res
 
 def guess_tags(lex, pos):
   if pos == 'NN':
