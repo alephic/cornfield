@@ -315,10 +315,10 @@ class Possessive(FeatToken):
     super().__init__(lex, {COUNT: ANY}, llam=poss_llam)
 
 def adv_rlam(adv, other):
-  if matches(VP, other[CAT]):
+  if matches([VP, V], other[CAT]):
     return ModL(other, adv)
 def adv_llam(adv, other):
-  if matches(VP, other[CAT]):
+  if matches([VP, V], other[CAT]):
     return ModR(other, adv)
 
 class Adverb(FeatToken):
