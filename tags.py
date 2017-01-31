@@ -226,7 +226,7 @@ def get_verb_rlam(arg_pats):
           modres = res.llam(res, vp)
           if modres:
             def raised_mod_rlam(vp2, other2):
-              res2 = other.rlam(other, other2):
+              res2 = other.rlam(other, other2)
               if res2:
                 return res2.llam(res2, vp)
             return ArgR(vp, other, rlam=raised_mod_rlam, llam=vp.llam)
