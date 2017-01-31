@@ -156,7 +156,7 @@ class ArgR(Arg):
     return str(self.head)+' '+str(self.arg)
   def __repr__(self):
     if CAT in self.feats:
-      return '[.'+repr(self.feats[CAT]+' '+repr(self.head)+' '+repr(self.arg)+']'
+      return '[.'+repr(self.feats[CAT])+' '+repr(self.head)+' '+repr(self.arg)+']'
     else:
       return '['+repr(self.head)+' '+repr(self.arg)+']'
 
@@ -165,7 +165,7 @@ class ArgL(Arg):
     return str(self.arg)+' '+str(self.head)
   def __repr__(self):
     if CAT in self.feats:
-      return '[.'+repr(self.feats[CAT]+' '+repr(self.arg)+' '+repr(self.head)+']'
+      return '[.'+repr(self.feats[CAT])+' '+repr(self.arg)+' '+repr(self.head)+']'
     else:
       return '['+repr(self.arg)+' '+repr(self.head)+']'
     
