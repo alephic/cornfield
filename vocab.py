@@ -36,7 +36,7 @@ def get_tags(lex):
 
 def guess_tags(lex, pos):
   if pos == 'NN':
-    return [Noun(lex, SING)]
+    return [Noun(lex, SING), FeatToken(lex, {CAT: DP, CASE: ANY, COUNT: SING, PERSON: THIRD})]
   elif pos == 'NNS':
     return [Noun(lex, PLUR), FeatToken(lex, {CAT: DP, CASE: ANY, COUNT: PLUR, PERSON: THIRD})]
   elif pos == 'NNP':
@@ -59,6 +59,8 @@ def guess_tags(lex, pos):
     return [Verb(lex, PART, nom_subj_pat_any, [dp_arg_pat])]
   elif pos == 'VBG':
     return [Verb(lex, GERUND, nom_subj_pat_any, [dp_arg_pat])]
+  elif pos == 'IN':
+    return [PrepositionMod(lex, {CAT: VP})]
   else:
     return []
 

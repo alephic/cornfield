@@ -43,6 +43,7 @@ TP = Feat("TP")
 CP = Feat("CP")
 Adj = Feat("Adj")
 Adv = Feat("Adv")
+P = Feat("P")
 PP = Feat("PP")
 
 # Special values
@@ -50,6 +51,7 @@ ANY = Feat("ANY")
 
 # Special features
 HAS_SUBJ = Feat("HAS_SUBJ")
+HAS_ARGS = Feat("HAS_ARGS")
 LEX = Feat("LEX")
 ARG_CAT = Feat("ARG_CAT")
 LOC = Feat("LOC")
@@ -161,13 +163,19 @@ class ArgL(Arg):
     
 def mod_rlam(mod, other):
   res = mod.head.rlam(mod.head, other)
-  if res and isinstance(res, Arg) and res.head == mod.head:
-    res.head = mod
+  if res:
+    if isinstance(res, Arg) and res.head == mod.head:
+      res.head = mod
+    if isinstance(res, Mod) and res.mod == mod.head:
+      res.mod = mod
   return res
 def mod_llam(mod, other):
   res = mod.head.llam(mod.head, other)
-  if res and isinstance(res, Arg) and res.head == mod.head:
-    res.head = mod
+  if res:
+    if isinstance(res, Arg) and res.head == mod.head:
+      res.head = mod
+    if isinstance(res, Mod) and res.mod == mod.head:
+      res.mod = mod
   return res
 
 class Mod(HeadedToken):
@@ -194,9 +202,10 @@ def get_verb_rlam(arg_pats):
     return no_lam
   def verb_rlam(vp, other):
     if pat_matches(arg_pats[0], other):
+      res_feats = {HAS_ARGS: True}
       if len(arg_pats) == 1:
-        return ArgR(vp, other, feats={CAT: VP}, llam=vp.llam)
-      return ArgR(vp, other, rlam=get_verb_rlam(arg_pats[1:]), llam=vp.llam)
+        res_feats[CAT] = VP
+      return ArgR(vp, other, feats=res_feats, rlam=get_verb_rlam(arg_pats[1:]), llam=vp.llam)
   return verb_rlam
 
 def get_verb_llam(subj_pat):
@@ -225,8 +234,8 @@ def get_verb_pass_inter_rlam(subj_pat):
 
 def get_verb_aux_rlam(arg_pat):
   def verb_aux_rlam(v_aux, other):
-    if pat_matches({CAT: V, HAS_SUBJ: False}, other) and pat_matches(arg_pat, other):
-      return ArgR(v_aux, other, llam=v_aux.llam, rlam=other.rlam)
+    if pat_matches({CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, other) and pat_matches(arg_pat, other):
+      return ArgR(v_aux, other, feats={HAS_ARGS: True}, llam=v_aux.llam, rlam=other.rlam)
   return verb_aux_rlam
 
 def get_verb_aux_inter_rlam(subj_pat, arg_pat):
@@ -243,27 +252,27 @@ nom_subj_pat_tps = nom_subj_pat(THIRD, SING)
 
 class Verb(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pats):
-    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False}, rlam=get_verb_rlam(arg_pats), llam=get_verb_llam(subj_pat))
+    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=get_verb_rlam(arg_pats), llam=get_verb_llam(subj_pat))
 
 class VerbInter(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pats):
-    super().__init__(lex, {FORM: form, MOOD: INTER, CAT: V, HAS_SUBJ: False}, rlam=get_verb_inter_rlam(subj_pat, arg_pats))
+    super().__init__(lex, {FORM: form, MOOD: INTER, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=get_verb_inter_rlam(subj_pat, arg_pats))
 
 class VerbPass(FeatToken):
   def __init__(self, lex, form, subj_pat):
-    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False}, rlam=verb_pass_rlam, llam=get_verb_llam(subj_pat))
+    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=verb_pass_rlam, llam=get_verb_llam(subj_pat))
 
 class VerbPassInter(FeatToken):
   def __init__(self, lex, form, subj_pat):
-    super().__init__(lex, {FORM: form, MOOD: INTER, CAT: V, HAS_SUBJ: False}, rlam=get_verb_pass_inter_rlam(subj_pat))
+    super().__init__(lex, {FORM: form, MOOD: INTER, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=get_verb_pass_inter_rlam(subj_pat))
 
 class VerbAux(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pat):
-    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False}, rlam=get_verb_aux_rlam(arg_pat), llam=get_verb_llam(subj_pat))
+    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=get_verb_aux_rlam(arg_pat), llam=get_verb_llam(subj_pat))
 
 class VerbAuxInter(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pat):
-    super().__init__(lex, {FORM: form, MOOD: INTER, CAT: V, HAS_SUBJ: False}, rlam=get_verb_aux_inter_rlam(subj_pat, arg_pat))
+    super().__init__(lex, {FORM: form, MOOD: INTER, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=get_verb_aux_inter_rlam(subj_pat, arg_pat))
 
 class Noun(FeatToken):
   def __init__(self, lex, count):
@@ -319,7 +328,7 @@ def get_prep_mod_rlam(head_pat):
 
 class PrepositionMod(FeatToken):
   def __init__(self, lex, head_pat):
-    super().__init__(lex, {LEX: lex}, rlam=get_prep_mod_rlam(head_pat))
+    super().__init__(lex, {LEX: lex, CAT: P}, rlam=get_prep_mod_rlam(head_pat))
 
 def prep_rlam(prep, other):
   if matches(DP, other[CAT]):
@@ -327,7 +336,7 @@ def prep_rlam(prep, other):
 
 class Preposition(FeatToken):
   def __init__(self, lex):
-    super().__init__(lex, {LEX: lex}, rlam=prep_rlam)
+    super().__init__(lex, {LEX: lex, CAT: P}, rlam=prep_rlam)
 
 def get_comp_rlam(arg_pat):
   def comp_rlam(comp, other):
@@ -359,7 +368,7 @@ def conj_rlam(conj, other_r):
     def conj_llam(conj, other_l):
       if matches(other_r[CAT], other_l[CAT]):
         return ConjunctPhrase(conj.lex, other_l, other_r)
-    return Token(conj.lex, llam=conj_llam)
+    return ArgR(conj, other_r, llam=conj_llam)
 
 class Conjunction(Token):
   def __init__(self, lex):
