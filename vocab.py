@@ -9,9 +9,9 @@ known_pos = pos_tags.load_pos_tags('en-ud-tags.pkl')
 
 def morph_detect(lex):
   if lex.endswith('ed'):
-    return ['VBD', 'VBN', 'JJ']
+    return ['VBD', 'VBN']
   elif lex.endswith('ing'):
-    return ['VBG', 'JJ']
+    return ['VBG']
   elif lex.endswith('s'):
     return ['VBZ', 'NNS']
   elif lex.endswith('ly'):
