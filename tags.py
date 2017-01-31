@@ -206,20 +206,40 @@ class ModL(Mod):
     return '['+repr(self.mod)+' '+repr(self.head)+']'
 
 def get_verb_rlam(arg_pats):
-  if len(arg_pats) == 0:
-    return no_lam
-  def verb_rlam(vp, other):
-    if pat_matches(arg_pats[0], other):
+  def verb_base_rlam(vp, other):
+    if len(arg_pats) > 0 and pat_matches(arg_pats[0], other):
       res_feats = {HAS_ARGS: True}
       if len(arg_pats) == 1:
         res_feats[CAT] = VP
       return ArgR(vp, other, feats=res_feats, rlam=get_verb_rlam(arg_pats[1:]), llam=vp.llam)
+  def verb_rlam(vp, other):
+    if matches(P, other[CAT]):
+      res = other.rlam(other, GAP)
+      if res:
+        if len(arg_pats) > 0 and pat_matches(arg_pats[0], res):
+          def raised_rlam(vp2, other2):
+            res2 = other.rlam(other, other2)
+            if res2:
+              return verb_base_rlam(vp, res2)
+          return ArgR(vp, other, rlam=raised_rlam, llam=vp.llam)
+        else:
+          modres = res.llam(res, vp)
+          if modres:
+            def raised_mod_rlam(vp2, other2):
+              res2 = other.rlam(other, other2):
+              if res2:
+                return res2.llam(res2, vp)
+            return ArgR(vp, other, rlam=raised_mod_rlam, llam=vp.llam)
+    return verb_base_rlam(vp, other)
   return verb_rlam
+
+def verb_rel_llam(vp, other):
+  if 
 
 def get_verb_llam(subj_pat):
   def verb_llam(vp, other):
     if pat_matches(subj_pat, other):
-      return ArgL(vp, other, rlam=vp.rlam, feats={HAS_SUBJ:True})
+      return ArgL(vp, other, rlam=vp.rlam, llam=verb_rel_llam, feats={HAS_SUBJ:True})
   return verb_llam
 
 def get_verb_inter_rlam(subj_pat, arg_pats):
