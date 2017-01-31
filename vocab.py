@@ -78,7 +78,7 @@ add_tok(Conjunction('and'))
 add_tok(Conjunction('or'))
 
 add_tok(Possessive('\'s'))
-add_tok(PrepositionMod('of', {CAT: NP}))
+add_tok(PrepositionMod('of', {CAT: N}))
 
 add_tok(Determiner('the', [SING, PLUR]))
 add_tok(Determiner('a', SING))
