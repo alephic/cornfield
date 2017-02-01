@@ -33,6 +33,9 @@ GERUND = Feat("GERUND")
 MODAL = Feat("MODAL")
 INF = Feat("INF")
 
+def can_have_subj(form):
+  return form not in [BARE, PART, INF]
+
 # Span labels
 CAT = Feat("CAT")
 N = Feat("N")
@@ -58,6 +61,7 @@ LEX = Feat("LEX")
 ARG_CAT = Feat("ARG_CAT")
 LOC = Feat("LOC")
 REL = Feat("REL")
+REL_EXT = Feat("REL_EXT")
 
 # Moods
 MOOD = Feat("MOOD")
@@ -280,7 +284,7 @@ nom_subj_pat_tps = nom_subj_pat(THIRD, SING)
 
 class Verb(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pats):
-    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=get_verb_rlam(arg_pats), llam=get_verb_llam(subj_pat))
+    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=get_verb_rlam(arg_pats), llam=get_verb_llam(subj_pat) if can_have_subj(form) else no_lam)
 
 class VerbInter(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pats):
@@ -288,7 +292,7 @@ class VerbInter(FeatToken):
 
 class VerbPass(FeatToken):
   def __init__(self, lex, form, subj_pat):
-    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=verb_pass_rlam, llam=get_verb_llam(subj_pat))
+    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=verb_pass_rlam, llam=get_verb_llam(subj_pat) if can_have_subj(form) else no_lam)
 
 class VerbPassInter(FeatToken):
   def __init__(self, lex, form, subj_pat):
@@ -296,7 +300,7 @@ class VerbPassInter(FeatToken):
 
 class VerbAux(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pat):
-    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=get_verb_aux_rlam(arg_pat), llam=get_verb_llam(subj_pat))
+    super().__init__(lex, {FORM: form, MOOD: DECL, CAT: V, HAS_SUBJ: False, HAS_ARGS: False}, rlam=get_verb_aux_rlam(arg_pat), llam=get_verb_llam(subj_pat) if can_have_subj(form) else no_lam)
 
 class VerbAuxInter(FeatToken):
   def __init__(self, lex, form, subj_pat, arg_pat):
@@ -322,7 +326,7 @@ def det_rlam(det, other):
   if pat_matches({CAT: N, COUNT: det[COUNT]}, other):
     res_feats = {CAT: DP, PERSON: THIRD, CASE:ANY}
     if det[REL]:
-      res_feats[REL] = True
+      res_feats[REL] = det[REL]
     return ArgR(det, other, feats=res_feats)
 
 class Determiner(FeatToken):
@@ -358,7 +362,7 @@ def get_prep_mod_rlam(head_pat):
   def prep_rlam(prep, other):
     if matches(DP, other[CAT]):
       res_feats = {CAT: PP}
-      if other[REL]:
+      if other[REL] == REL_EXT:
         res_feats[REL] = True
       return ArgR(prep, other, feats=res_feats, rlam=pp_rlam, llam=pp_llam)
   return prep_rlam

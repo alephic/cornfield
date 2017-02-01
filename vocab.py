@@ -118,7 +118,7 @@ add_tok(FeatToken('them', {CAT: DP, CASE: ACC, COUNT: PLUR, PERSON: THIRD}))
 add_tok(FeatToken('themselves', {CAT: DP, CASE: ACC, COUNT: PLUR, PERSON: THIRD}))
 add_tok(Determiner('their', ANY))
 add_tok(FeatToken('theirs', {CAT: DP, CASE: ANY, COUNT: ANY, PERSON: THIRD}))
-add_tok(FeatToken('that', {CAT: DP, CASE: ANY, COUNT: SING, PERSON: THIRD}))
+add_tok(FeatToken('that', {CAT: DP, CASE: ANY, COUNT: SING, PERSON: THIRD, REL: True}))
 add_tok(Determiner('that', SING))
 add_tok(FeatToken('those', {CAT: DP, CASE: ANY, COUNT: PLUR, PERSON: THIRD}))
 add_tok(Determiner('those', PLUR))
@@ -126,6 +126,16 @@ add_tok(FeatToken('this', {CAT: DP, CASE: ANY, COUNT: SING, PERSON: THIRD}))
 add_tok(Determiner('this', SING))
 add_tok(FeatToken('these', {CAT: DP, CASE: ANY, COUNT: PLUR, PERSON: THIRD}))
 add_tok(Determiner('these', PLUR))
+
+add_tok(FeatToken('who', {CAT: DP, CASE: ANY, COUNT: ANY, PERSON: THIRD, REL: REL_EXT}))
+add_tok(FeatToken('where', {CAT: DP, CASE: ANY, COUNT: ANY, PERSON: THIRD, LOC: True, REL: REL_EXT}))
+add_tok(FeatToken('which', {CAT: DP, CASE: ANY, COUNT: ANY, PERSON: THIRD, REL: REL_EXT}))
+add_tok(ComplementizerMod('why', {CAT: DP}, {CAT: VP, FORM: [PRES, PRET]})
+add_tok(FeatToken('whom', {CAT: DP, CASE: ACC, COUNT: ANY, PERSON: THIRD, REL: REL_EXT}))
+whose_tok = Determiner('whose', ANY)
+whose_tok.feats[REL] = REL_EXT
+add_tok(whose_tok)
+add_tok(ComplementizerMod('when', {CAT: [DP, VP]}, {CAT: VP, FORM: [PRES, PRET]}))
 
 add_tok(FeatToken('there', {CAT: DP, CASE: ANY, COUNT: SING, PERSON: THIRD, LOC: True}))
 
@@ -226,9 +236,7 @@ add_tok(VerbAuxInter('\'s', PRES, nom_subj_pat_tps, perf_aux_arg_pat))
 add_tok(VerbAuxInter('had', PRET, nom_subj_pat_any, perf_aux_arg_pat))
 add_tok(VerbAuxInter('\'d', PRET, nom_subj_pat_any, perf_aux_arg_pat))
 
-to_tok = VerbAux('to', INF, nom_subj_pat_any, {FORM: BARE})
-to_tok.llam = no_lam
-add_tok(to_tok)
+add_tok(VerbAux('to', INF, nom_subj_pat_any, {FORM: BARE}))
 
 inf_arg_pat = {FORM: INF}
 # Necessitative "have"
