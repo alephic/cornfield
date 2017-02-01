@@ -356,15 +356,15 @@ def get_prep_mod_rlam(head_pat):
   def pp_llam(pp, other):
     if pat_matches(head_pat, other):
       return ModR(other, pp, feats={REL: True} if pp[REL] else {})
-  def pp_rlam(pp, other):
-    if pat_matches(head_pat, other):
-      return ModL(other, pp, feats={REL: True} if pp[REL] else {})
+  #def pp_rlam(pp, other):
+  #  if pat_matches(head_pat, other):
+  #    return ModL(other, pp, feats={REL: True} if pp[REL] else {})
   def prep_rlam(prep, other):
     if matches(DP, other[CAT]):
       res_feats = {CAT: PP}
       if other[REL] == REL_EXT:
         res_feats[REL] = True
-      return ArgR(prep, other, feats=res_feats, rlam=pp_rlam, llam=pp_llam)
+      return ArgR(prep, other, feats=res_feats, llam=pp_llam)
   return prep_rlam
 
 class PrepositionMod(FeatToken):

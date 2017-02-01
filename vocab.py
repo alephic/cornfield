@@ -130,7 +130,7 @@ add_tok(Determiner('these', PLUR))
 add_tok(FeatToken('who', {CAT: DP, CASE: ANY, COUNT: ANY, PERSON: THIRD, REL: REL_EXT}))
 add_tok(FeatToken('where', {CAT: DP, CASE: ANY, COUNT: ANY, PERSON: THIRD, LOC: True, REL: REL_EXT}))
 add_tok(FeatToken('which', {CAT: DP, CASE: ANY, COUNT: ANY, PERSON: THIRD, REL: REL_EXT}))
-add_tok(ComplementizerMod('why', {CAT: DP}, {CAT: VP, FORM: [PRES, PRET]})
+add_tok(ComplementizerMod('why', {CAT: DP}, {CAT: VP, FORM: [PRES, PRET]}))
 add_tok(FeatToken('whom', {CAT: DP, CASE: ACC, COUNT: ANY, PERSON: THIRD, REL: REL_EXT}))
 whose_tok = Determiner('whose', ANY)
 whose_tok.feats[REL] = REL_EXT
