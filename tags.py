@@ -356,9 +356,6 @@ def get_prep_mod_rlam(head_pat):
   def pp_llam(pp, other):
     if pat_matches(head_pat, other):
       return ModR(other, pp, feats={REL: True} if pp[REL] else {})
-  #def pp_rlam(pp, other):
-  #  if pat_matches(head_pat, other):
-  #    return ModL(other, pp, feats={REL: True} if pp[REL] else {})
   def prep_rlam(prep, other):
     if matches(DP, other[CAT]):
       res_feats = {CAT: PP}
@@ -430,3 +427,9 @@ def conj_rlam(conj, other_r):
 class Conjunction(Token):
   def __init__(self, lex):
     super().__init__(lex, rlam=conj_rlam)
+
+def get_basic_arg_rlam(arg_pat):
+  def arg_rlam(head, other):
+    if pat_matches(arg_pat, other):
+      return ArgR(head, other)
+  return arg_rlam
