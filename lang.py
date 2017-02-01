@@ -2,24 +2,26 @@ from tags import *
 from vocab import *
 
 def lam_apply(tok1, tok2):
-  res = []
   y1 = tok1.rlam(tok1, tok2)
   if y1:
-    res.append(y1)
+    yield y1
   y2 = tok2.llam(tok2, tok1)
   if y2:
-    res.append(y2)
-  return res
+    yield y2
 
 def parse_tokens(tokenss):
   fringe = tokenss
   while True:
     if fringe == []:
-      return None
+      return
     curr = fringe.pop()
     if len(curr) == 1:
-      return curr[0]
+      yield curr[0]
     for i in range(len(curr)-1):
+      if curr[i+1].bilam and i+2 < len(curr):
+        res = curr[i+1].bilam(curr[i+1], curr[i], curr[i+2])
+        if res:
+          fringe.append(curr[:i]+[res]+curr[i+3:])
       for y in lam_apply(curr[i], curr[i+1]):
         fringe.append(curr[:i]+[y]+curr[i+2:])
 
@@ -46,4 +48,4 @@ def tag(text):
 
 def parse_text(text):
   tokenss = tag(text)
-  return parse_tokens(tokenss)
+  return next(parse_tokens(tokenss), None)

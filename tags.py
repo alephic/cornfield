@@ -103,10 +103,11 @@ def no_lam(token, other):
   pass
 
 class Token:
-  def __init__(self, lex, rlam=no_lam, llam=no_lam):
+  def __init__(self, lex, rlam=no_lam, llam=no_lam, bilam=None):
     self.lex = lex
     self.rlam = rlam
     self.llam = llam
+    self.bilam = bilam
   def __getitem__(self, item):
     pass
   def __str__(self):
@@ -140,6 +141,7 @@ class HeadedToken(Token):
     self.feats = feats
     self.rlam = rlam
     self.llam = llam
+    self.bilam = None
   def __getitem__(self, item):
     return self.feats[item] if item in self.feats else self.head[item]
 
@@ -423,19 +425,17 @@ class ConjunctPhrase(Token):
     else:
       return self.head[item]
 
-def conj_rlam(conj, other_r):
-  if other_r[CAT]:
-    def conj_llam(partial, other_l):
-      if matches(other_r[CAT], other_l[CAT]):
-        # TP alignment hack
-        if matches(VP, other_l[CAT]) and not matches(other_r[HAS_SUBJ], other_l[HAS_SUBJ]):
-          return None
-        return ConjunctPhrase(conj.lex, other_l, other_r)
-    return ArgR(conj, other_r, llam=conj_llam)
+def conj_bilam(conj, other_l, other_r):
+  if other_l[CAT]:
+    if matches(other_l[CAT], other_r[CAT]):
+      # TP alignment hack
+      if matches(VP, other_l[CAT]) and not matches(other_r[HAS_SUBJ], other_l[HAS_SUBJ]):
+        return None
+      return ConjunctPhrase(conj.lex, other_l, other_r)
 
 class Conjunction(Token):
   def __init__(self, lex):
-    super().__init__(lex, rlam=conj_rlam)
+    super().__init__(lex, bilam=conj_bilam)
 
 def get_basic_arg_rlam(arg_pat):
   def arg_rlam(head, other):
