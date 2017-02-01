@@ -157,7 +157,10 @@ add_tok(FeatToken('arguments', {CAT: N, COUNT: PLUR}, rlam=fact_rlam))
 
 add_tok(FeatToken('there', {CAT: DP, CASE: ANY, COUNT: SING, PERSON: THIRD, LOC: True}))
 
-add_tok(FeatToken('something', {CAT: DP, CASE: ANY, COUNT:SING, PERSON: THIRD}))
+add_tok(FeatToken('one', {CAT: DP, CASE: ANY, COUNT:SING, PERSON: THIRD, CAN_REL: True}))
+add_tok(FeatToken('one', {CAT: N, COUNT: SING}))
+
+add_tok(FeatToken('something', {CAT: DP, CASE: ANY, COUNT:SING, PERSON: THIRD, CAN_REL: True}))
 add_tok(FeatToken('somewhere', {CAT: DP, CASE: ANY, COUNT:SING, PERSON: THIRD, LOC: True}))
 
 copula_arg_pats = [[{CAT: [Adj, PP]}, {CAT: DP, CASE: ACC, COUNT: ANY}]]
