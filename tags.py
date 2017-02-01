@@ -62,6 +62,7 @@ ARG_CAT = Feat("ARG_CAT")
 LOC = Feat("LOC")
 REL = Feat("REL")
 REL_EXT = Feat("REL_EXT")
+CAN_REL = Feat("CAN_REL")
 
 # Moods
 MOOD = Feat("MOOD")
@@ -200,7 +201,7 @@ class ModL(Mod):
     return '['+repr(self.mod)+' '+repr(self.head)+']'
 
 def rel_llam(rel, other):
-  if matches(DP, other[CAT]):
+  if other[CAN_REL]:
     return ModR(other, rel)
 
 def get_verb_rlam(arg_pats):
@@ -236,13 +237,16 @@ def verb_rel_llam(vp, other):
   if res and matches(VP, res[CAT]):
     if other[REL]:
       return ArgR(other, vp, llam=rel_llam)
-    return ModR(other, vp)
+    if other[CAN_REL]:
+      return ModR(other, vp)
 
 def get_verb_llam(subj_pat):
   def verb_llam(vp, other):
     if pat_matches(subj_pat, other):
       if other[REL]:
         return ArgL(vp, other, rlam=vp.rlam, llam=rel_llam, feats={HAS_SUBJ:True})
+      if other[CAN_REL] and matches([GERUND, PART], vp[FORM]):
+        return ModR(other, vp)
       return ArgL(vp, other, rlam=vp.rlam, llam=verb_rel_llam, feats={HAS_SUBJ:True})
   return verb_llam
 
@@ -309,7 +313,7 @@ class VerbAuxInter(FeatToken):
 class Noun(FeatToken):
   def __init__(self, lex, count):
     if count == PLUR:
-      fs = {CAT: [N, DP], COUNT: PLUR, CASE: ANY, PERSON: THIRD}
+      fs = {CAT: [N, DP], COUNT: PLUR, CASE: ANY, PERSON: THIRD, CAN_REL: True}
     else:
       fs = {CAT: N, COUNT: SING}
     super().__init__(lex, fs)
@@ -327,6 +331,8 @@ def det_rlam(det, other):
     res_feats = {CAT: DP, PERSON: THIRD, CASE:ANY}
     if det[REL]:
       res_feats[REL] = det[REL]
+    else:
+      res_feats[CAN_REL] = True
     return ArgR(det, other, feats=res_feats)
 
 class Determiner(FeatToken):
