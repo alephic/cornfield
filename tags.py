@@ -130,7 +130,7 @@ class FeatToken(Token):
     return self.feats[item] if item in self.feats else None
   def __repr__(self):
     if CAT in self.feats:
-      return repr(self.feats[CAT])+'.'+self.lex
+      return self.lex+':'+repr(self.feats[CAT])
     return self.lex
 
 class HeadedToken(Token):
@@ -152,7 +152,7 @@ class ArgR(Arg):
     return str(self.head)+' '+str(self.arg)
   def __repr__(self):
     if CAT in self.feats:
-      return '[.'+repr(self.feats[CAT])+' '+repr(self.head)+' '+repr(self.arg)+']'
+      return '['+repr(self.feats[CAT])+' '+repr(self.head)+' '+repr(self.arg)+']'
     else:
       return '['+repr(self.head)+' '+repr(self.arg)+']'
 
@@ -161,7 +161,7 @@ class ArgL(Arg):
     return str(self.arg)+' '+str(self.head)
   def __repr__(self):
     if CAT in self.feats:
-      return '[.'+repr(self.feats[CAT])+' '+repr(self.arg)+' '+repr(self.head)+']'
+      return '['+repr(self.feats[CAT])+' '+repr(self.arg)+' '+repr(self.head)+']'
     else:
       return '['+repr(self.arg)+' '+repr(self.head)+']'
     
@@ -421,6 +421,9 @@ def conj_rlam(conj, other_r):
   if other_r[CAT]:
     def conj_llam(partial, other_l):
       if matches(other_r[CAT], other_l[CAT]):
+        # TP alignment hack
+        if matches(VP, other_l[CAT]) and not matches(other_r[HAS_SUBJ], other_l[HAS_SUBJ]):
+          return None
         return ConjunctPhrase(conj.lex, other_l, other_r)
     return ArgR(conj, other_r, llam=conj_llam)
 
