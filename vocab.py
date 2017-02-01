@@ -226,7 +226,9 @@ add_tok(VerbAuxInter('\'s', PRES, nom_subj_pat_tps, perf_aux_arg_pat))
 add_tok(VerbAuxInter('had', PRET, nom_subj_pat_any, perf_aux_arg_pat))
 add_tok(VerbAuxInter('\'d', PRET, nom_subj_pat_any, perf_aux_arg_pat))
 
-add_tok(VerbAux('to', INF, nom_subj_pat_any, {FORM: BARE}))
+to_tok = VerbAux('to', INF, nom_subj_pat_any, {FORM: BARE})
+to_tok.llam = no_lam
+add_tok(to_tok)
 
 inf_arg_pat = {FORM: INF}
 # Necessitative "have"
