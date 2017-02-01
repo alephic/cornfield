@@ -195,6 +195,10 @@ class ModL(Mod):
   def __repr__(self):
     return '['+repr(self.mod)+' '+repr(self.head)+']'
 
+def rel_llam(rel, other):
+  if matches(DP, other[CAT]):
+    return ModR(other, rel)
+
 def get_verb_rlam(arg_pats):
   def verb_base_rlam(vp, other):
     if len(arg_pats) > 0 and pat_matches(arg_pats[0], other):
@@ -226,11 +230,15 @@ def get_verb_rlam(arg_pats):
 def verb_rel_llam(vp, other):
   res = vp.rlam(vp, other)
   if res and matches(VP, res[CAT]):
+    if other[REL]:
+      return ArgR(other, vp, llam=rel_llam)
     return ModR(other, vp)
 
 def get_verb_llam(subj_pat):
   def verb_llam(vp, other):
     if pat_matches(subj_pat, other):
+      if other[REL]:
+        return ArgL(vp, other, rlam=vp.rlam, llam=rel_llam, feats={HAS_SUBJ:True})
       return ArgL(vp, other, rlam=vp.rlam, llam=verb_rel_llam, feats={HAS_SUBJ:True})
   return verb_llam
 
@@ -312,7 +320,10 @@ class PosAdjective(FeatToken):
 
 def det_rlam(det, other):
   if pat_matches({CAT: N, COUNT: det[COUNT]}, other):
-    return ArgR(det, other, feats={CAT: DP, PERSON: THIRD, CASE: ANY})
+    res_feats = {CAT: DP, PERSON: THIRD, CASE:ANY}
+    if det[REL]:
+      res_feats[REL] = True
+    return ArgR(det, other, feats=res_feats)
 
 class Determiner(FeatToken):
   def __init__(self, lex, count):
@@ -340,13 +351,16 @@ class Adverb(FeatToken):
 def get_prep_mod_rlam(head_pat):
   def pp_llam(pp, other):
     if pat_matches(head_pat, other):
-      return ModR(other, pp)
+      return ModR(other, pp, feats={REL: True} if pp[REL] else {})
   def pp_rlam(pp, other):
     if pat_matches(head_pat, other):
-      return ModL(other, pp)
+      return ModL(other, pp, feats={REL: True} if pp[REL] else {})
   def prep_rlam(prep, other):
     if matches(DP, other[CAT]):
-      return ArgR(prep, other, feats={CAT: PP}, rlam=pp_rlam, llam=pp_llam)
+      res_feats = {CAT: PP}
+      if other[REL]:
+        res_feats[REL] = True
+      return ArgR(prep, other, feats=res_feats, rlam=pp_rlam, llam=pp_llam)
   return prep_rlam
 
 class PrepositionMod(FeatToken):
