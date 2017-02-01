@@ -47,5 +47,4 @@ def tag(text):
   return tokenss
 
 def parse_text(text):
-  tokenss = tag(text)
-  return next(parse_tokens(tokenss), None)
+  return next(parse_tokens(tag(text)), None)

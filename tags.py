@@ -339,7 +339,7 @@ def det_rlam(det, other):
 
 class Determiner(FeatToken):
   def __init__(self, lex, count):
-    super().__init__(lex, {COUNT: count}, rlam=det_rlam)
+    super().__init__(lex, {CAT: D, COUNT: count}, rlam=det_rlam)
 
 def poss_llam(poss, other):
   if matches(DP, other[CAT]):
@@ -410,28 +410,47 @@ class ComplementizerMod(FeatToken):
   def __init__(self, lex, head_pat, arg_pat):
     super().__init__(lex, {CAT: C, LEX: lex}, rlam=get_comp_mod_rlam(head_pat, arg_pat))
 
+def conjp_rlam(conjp, other):
+  res1 = conjp.head_l.rlam(conjp.head_l, other)
+  res2 = conjp.head_r.rlam(conjp.head_r, other)
+  if res1 and res2:
+    if isinstance(res1, Arg) and res1.head == conjp.head_l:
+      res.head = conjp
+    if isinstance(res1, Mod) and res1.mod == conjp.head_l:
+      res.mod = conjp
+  return res
+def conjp_llam(conjp, other):
+  res1 = conjp.head_l.llam(conjp.head_l, other)
+  res2 = conjp.head_r.llam(conjp.head_r, other)
+  if res1 and res2:
+    if isinstance(res1, Arg) and res1.head == conjp.head_l:
+      res1.head = conjp
+    if isinstance(res1, Mod) and res1.mod == conjp.head_l:
+      res1.mod = conjp
+  return res
+
 class ConjunctPhrase(Token):
   def __init__(self, lex, head_l, head_r):
-    super().__init__(lex, rlam=mod_rlam, llam=mod_llam)
-    self.head = head_l
+    super().__init__(lex, rlam=conjp_rlam, llam=conjp_llams)
+    self.head_l = head_l
     self.head_r = head_r
   def __str__(self):
-    return str(self.head)+' '+self.lex+' '+str(self.head_r)
+    return str(self.head_l)+' '+self.lex+' '+str(self.head_r)
   def __repr__(self):
-    return '[&P '+repr(self.head)+' &.'+self.lex+' '+repr(self.head_r)+']'
+    return '[&P '+repr(self.head_l)+' &.'+self.lex+' '+repr(self.head_r)+']'
   def __getitem__(self, item):
-    if matches(DP, self.head[CAT]) and item == COUNT:
+    if matches(DP, self.head_l[CAT]) and item == COUNT:
       return PLUR
     else:
-      return self.head[item]
+      return self.head_l[item]
 
 def conj_bilam(conj, other_l, other_r):
-  if other_l[CAT]:
-    if matches(other_l[CAT], other_r[CAT]):
-      # TP alignment hack
-      if matches(VP, other_l[CAT]) and not matches(other_r[HAS_SUBJ], other_l[HAS_SUBJ]):
-        return None
-      return ConjunctPhrase(conj.lex, other_l, other_r)
+  if matches(other_l[CAT], other_r[CAT]):
+    if not matches(other_l[HAS_SUBJ], other_r[HAS_SUBJ]):
+      return None
+    if matches([PRET, PRES], other_l[FORM]) != matches([PRET, PRES], other_r[FORM]):
+      return None
+    return ConjunctPhrase(conj.lex, other_l, other_r)
 
 class Conjunction(Token):
   def __init__(self, lex):
