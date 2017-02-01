@@ -57,6 +57,7 @@ HAS_ARGS = Feat("HAS_ARGS")
 LEX = Feat("LEX")
 ARG_CAT = Feat("ARG_CAT")
 LOC = Feat("LOC")
+REL = Feat("REL")
 
 # Moods
 MOOD = Feat("MOOD")
@@ -127,29 +128,20 @@ class FeatToken(Token):
     if CAT in self.feats:
       return repr(self.feats[CAT])+'.'+self.lex
     return self.lex
-    
-class HeadedToken(Token):
-  def __getitem__(self, item):
-    return self.head[item]
 
-class FeatAltToken(HeadedToken):
-  def __init__(self, head, feats={}):
+class HeadedToken(Token):
+  def __init__(self, head, rlam=no_lam, llam=no_lam, feats={}):
     self.head = head
     self.feats = feats
-    self.rlam = head.rlam
-    self.llam = head.llam
-  def __getitem__(self, item):
-    return self.feats[item] if item in self.feats else self.head[item]
-
-class Arg(FeatAltToken):
-  def __init__(self, head, arg, rlam=no_lam, llam=no_lam, feats={}):
-    self.head = head
-    self.arg = arg
     self.rlam = rlam
     self.llam = llam
-    self.feats = feats
   def __getitem__(self, item):
     return self.feats[item] if item in self.feats else self.head[item]
+
+class Arg(HeadedToken):
+  def __init__(self, head, arg, rlam=no_lam, llam=no_lam, feats={}):
+    super().__init__(head, rlam=rlam, llam=llam, feats=feats)
+    self.arg = arg
 
 class ArgR(Arg):
   def __str__(self):
@@ -187,11 +179,9 @@ def mod_llam(mod, other):
   return res
 
 class Mod(HeadedToken):
-  def __init__(self, head, mod):
-    self.head = head
+  def __init__(self, head, mod, feats={}):
+    super().__init__(head, rlam=mod_rlam, llam=mod_llam, feats=feats)
     self.mod = mod
-    self.rlam = mod_rlam
-    self.llam = mod_llam
 
 class ModR(Mod):
   def __str__(self):
