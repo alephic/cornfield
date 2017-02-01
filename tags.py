@@ -415,10 +415,10 @@ def conjp_rlam(conjp, other):
   res2 = conjp.head_r.rlam(conjp.head_r, other)
   if res1 and res2:
     if isinstance(res1, Arg) and res1.head == conjp.head_l:
-      res.head = conjp
+      res1.head = conjp
     if isinstance(res1, Mod) and res1.mod == conjp.head_l:
-      res.mod = conjp
-  return res
+      res1.mod = conjp
+    return res1
 def conjp_llam(conjp, other):
   res1 = conjp.head_l.llam(conjp.head_l, other)
   res2 = conjp.head_r.llam(conjp.head_r, other)
@@ -427,11 +427,11 @@ def conjp_llam(conjp, other):
       res1.head = conjp
     if isinstance(res1, Mod) and res1.mod == conjp.head_l:
       res1.mod = conjp
-  return res
+    return res1
 
 class ConjunctPhrase(Token):
   def __init__(self, lex, head_l, head_r):
-    super().__init__(lex, rlam=conjp_rlam, llam=conjp_llams)
+    super().__init__(lex, rlam=conjp_rlam, llam=conjp_llam)
     self.head_l = head_l
     self.head_r = head_r
   def __str__(self):

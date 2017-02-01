@@ -9,12 +9,14 @@ def lam_apply(tok1, tok2):
   if y2:
     yield y2
 
-def parse_tokens(tokenss):
+def parse_tokens(tokenss, verbose=False):
   fringe = tokenss
   while True:
     if fringe == []:
       return
     curr = fringe.pop()
+    if verbose:
+      print(curr)
     if len(curr) == 1:
       yield curr[0]
     for i in range(len(curr)-1):
@@ -46,5 +48,5 @@ def tag(text):
     tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word.lower())]
   return tokenss
 
-def parse_text(text):
-  return next(parse_tokens(tag(text)), None)
+def parse_text(text, verbose=False):
+  return next(parse_tokens(tag(text), verbose=verbose), None)
