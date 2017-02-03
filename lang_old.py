@@ -16,16 +16,22 @@ def parse_tokens(tokenss, verbose=False):
       return
     curr = fringe.pop()
     if verbose:
-      print(curr)
+      print("Popped", curr)
     if len(curr) == 1:
       yield curr[0]
     for i in range(len(curr)-1):
       if curr[i+1].bilam and i+2 < len(curr):
         res = curr[i+1].bilam(curr[i+1], curr[i], curr[i+2])
         if res:
-          fringe.append(curr[:i]+[res]+curr[i+3:])
+          new = curr[:i]+[res]+curr[i+3:]
+          if verbose:
+            print("Pushing", new)
+          fringe.append(new)
       for y in lam_apply(curr[i], curr[i+1]):
-        fringe.append(curr[:i]+[y]+curr[i+2:])
+        new = curr[:i]+[y]+curr[i+2:]
+        if verbose:
+          print("Pushing", new)
+        fringe.append(new)
 
 def tokenize(text):
   res = []
@@ -48,5 +54,5 @@ def tag(text):
     tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word.lower())]
   return tokenss
 
-def parse_text(text, verbose=False):
+def parse(text, verbose=False):
   return next(parse_tokens(tag(text), verbose=verbose), None)
