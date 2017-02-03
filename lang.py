@@ -39,17 +39,18 @@ def lam_apply(l_edgess, r_edgess, fringe_entry):
 def parse_tokens(tokenss, verbose=False):
   l_edgess = [[] for i in range(len(tokenss))]
   r_edgess = [[] for i in range(len(tokenss))]
-  fringe = [(i, i, t) for t in tokenss[i] for i in range(len(tokenss))]
+  fringe = [(i, i, t) for i in range(len(tokenss)) for t in tokenss[i]]
   while len(fringe) > 0:
     (l_i, r_i, item) = fringe_entry = fringe.pop()
+    print("Popped", fringe_entry)
     if l_i == 0 and r_i == len(tokenss)-1:
       yield item
       continue
+    l_edgess[l_i].append((r_i, item))
+    r_edgess[r_i].append((l_i, item))
     for new_entry in lam_apply(l_edgess, r_edgess, fringe_entry):
       (new_l_i, new_r_i, new_item) = new_entry
       fringe.append(new_entry)
-      l_edgess[new_l_i].append((new_r_i, new_item))
-      r_edgess[new_r_i].append((new_l_i, new_item))
 
 def tokenize(text):
   res = []
@@ -69,4 +70,4 @@ def tag(text):
   return [get_tags(word.lower()) for word in tokenize(text)]
 
 def parse(text):
-  return next(parse_tokens(tag(text)))
+  return next(parse_tokens(tag(text)), None)
