@@ -1,31 +1,47 @@
 from tags import *
 from vocab import *
 
-def lam_apply(tok1, tok2):
-  y1 = tok1.rlam(tok1, tok2)
-  if y1:
-    yield y1
-  y2 = tok2.llam(tok2, tok1)
-  if y2:
-    yield y2
-
 def parse_tokens(tokenss, verbose=False):
-  fringe = tokenss
-  while True:
-    if fringe == []:
-      return
-    curr = fringe.pop()
-    if verbose:
-      print(curr)
-    if len(curr) == 1:
-      yield curr[0]
-    for i in range(len(curr)-1):
-      if curr[i+1].bilam and i+2 < len(curr):
-        res = curr[i+1].bilam(curr[i+1], curr[i], curr[i+2])
+  l_edgess = [[] for i in range(len(tokenss))]
+  r_edgess = [[] for i in range(len(tokenss))]
+  fringe = [(i, i, t) for t in tokenss[i] for i in range(len(tokenss))]
+  while len(fringe) > 0:
+    (l_i, r_i, item) = fringe_entry = fringe.pop()
+    if l_i == 0 and r_i == len(tokenss)-1:
+      yield item
+      continue
+    if l_i-1 > 0:
+      for (far_l_i, l_item) in r_edgess[l_i-1]:
+        if l_item.bilam and far_l_i-1 > 0:
+          for (further_l_i, far_l_item) in r_edgess[far_l_i-1]:
+            res_bi_l = l_item.bilam(l_item, far_l_item, item)
+            if res_bi_l:
+              fringe.append((further_l_i, r_i, res_bi_l))
+        res_l = l_item.rlam(l_item, item)
+        if res_l:
+          fringe.append((far_l_i, r_i, res_l))
+        res = item.llam(item, l_item)
         if res:
-          fringe.append(curr[:i]+[res]+curr[i+3:])
-      for y in lam_apply(curr[i], curr[i+1]):
-        fringe.append(curr[:i]+[y]+curr[i+2:])
+          fringe.append((far_l_i, r_i, res))
+    if r_i+1 < len(l_edgess):
+      for (far_r_i, r_item) in l_edgess[r_i+1]:
+        if r_item.bilam and far_r_i+1 < len(l_edgess):
+          for (further_r_i, far_r_item) in l_edgess[far_r_i+1]:
+            res_bi_r = r_item.bilam(r_item, item, far_r_item)
+            if res_bi_r:
+              fringe.append((l_i, further_r_i, res_bi_r))
+        res_r = r_item.llam(r_item, item)
+        if res_r:
+          fringe.append((l_i, far_r_i, res_r))
+        res = item.rlam(item, r_item)
+        if res:
+          fringe.append((l_i, far_r_i, res))
+      if item.bilam and l_i-1 > 0:
+        for (far_l_i, l_item) in r_edgess[l_i-1]:
+          for (far_r_i, r_item) in l_edgess[r_i+1]:
+            res_bi = item.bilam(item, l_item, r_item)
+            if res_bi:
+              fringe.append((far_l_i, far_r_i, res_bi))
 
 def tokenize(text):
   res = []
@@ -42,11 +58,7 @@ def tokenize(text):
   return res
 
 def tag(text):
-  words = tokenize(text)
-  tokenss = [[]]
-  for word in words:
-    tokenss = [tokens+[tag] for tokens in tokenss for tag in get_tags(word.lower())]
-  return tokenss
+  return [get_tags(word.lower()) for word in tokenize(text)]
 
-def parse_text(text, verbose=False):
-  return next(parse_tokens(tag(text), verbose=verbose), None)
+def parse(text):
+  return next(parse_tokens(tag(text)))
