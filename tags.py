@@ -63,6 +63,7 @@ LOC = Feat("LOC")
 REL = Feat("REL")
 REL_EXT = Feat("REL_EXT")
 CAN_REL = Feat("CAN_REL")
+PRO = Feat("PRO")
 
 # Moods
 MOOD = Feat("MOOD")
@@ -246,7 +247,8 @@ def get_verb_llam(subj_pat):
   def verb_llam(vp, other):
     if pat_matches(subj_pat, other):
       if other[REL]:
-        return ArgL(vp, other, rlam=vp.rlam, llam=rel_llam, feats={HAS_SUBJ:True})
+        return [ArgL(vp, other, rlam=vp.rlam, llam=rel_llam, feats={HAS_SUBJ:True}),
+          ModR(other, vp)]
       if other[CAN_REL] and matches([GERUND, PART], vp[FORM]):
         return ModR(other, vp)
       return ArgL(vp, other, rlam=vp.rlam, llam=verb_rel_llam, feats={HAS_SUBJ:True})
@@ -342,7 +344,7 @@ class Determiner(FeatToken):
     super().__init__(lex, {CAT: D, COUNT: count}, rlam=det_rlam)
 
 def poss_llam(poss, other):
-  if matches(DP, other[CAT]):
+  if pat_matches({CAT: DP, PRO: None}, other):
     return ArgL(poss, other, rlam=det_rlam)
 
 class Possessive(FeatToken):
@@ -365,7 +367,7 @@ def get_prep_mod_rlam(head_pat):
     if pat_matches(head_pat, other):
       return ModR(other, pp, feats={REL: True} if pp[REL] else {})
   def prep_rlam(prep, other):
-    if matches(DP, other[CAT]):
+    if pat_matches({CAT: DP, CASE: ACC}, other):
       res_feats = {CAT: PP}
       if other[REL] == REL_EXT:
         res_feats[REL] = True

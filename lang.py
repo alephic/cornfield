@@ -49,11 +49,16 @@ def parse_tokens(tokenss, verbose=False):
       continue
     l_edgess[l_i].append((r_i, item))
     r_edgess[r_i].append((l_i, item))
-    for new_entry in lam_apply(l_edgess, r_edgess, fringe_entry):
-      if verbose:
-        print("Pushing", new_entry)
-      (new_l_i, new_r_i, new_item) = new_entry
-      fringe.append(new_entry)
+    for (new_l, new_r, new_item) in lam_apply(l_edgess, r_edgess, fringe_entry):
+      if isinstance(new_item, list):
+        for possible in new_item:
+          if verbose:
+            print("Pushing", (new_l, new_r, possible))
+          fringe.append((new_l, new_r, possible))
+      else:
+        if verbose:
+          print("Pushing", (new_l, new_r, new_item))
+        fringe.append((new_l, new_r, new_item))
 
 def tokenize(text):
   res = []
