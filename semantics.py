@@ -1,3 +1,4 @@
+from tags import *
 
 # Fact properties
 PRED = object()
@@ -7,6 +8,8 @@ INSTR = object()
 GOAL = object()
 MOTIV = object()
 COND = object()
+# Special properties
+PASS = object()
 class NAMED_PROP:
   def __init__(self, name):
     self.name = name
