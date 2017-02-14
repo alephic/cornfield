@@ -223,7 +223,7 @@ def get_verb_rlam(arg_pats):
             res2 = other.rlam(other, other2)
             if res2:
               return verb_base_rlam(vp, res2)
-          return ArgR(vp, other, rlam=raised_rlam, llam=vp.llam)
+          return ArgR(vp, other, feats={CAT: None}, rlam=raised_rlam, llam=vp.llam)
         else:
           modres = res.llam(res, vp)
           if modres:
@@ -231,7 +231,7 @@ def get_verb_rlam(arg_pats):
               res2 = other.rlam(other, other2)
               if res2:
                 return res2.llam(res2, vp)
-            return ArgR(vp, other, rlam=raised_mod_rlam, llam=vp.llam)
+            return ArgR(vp, other, feats={CAT: None}, rlam=raised_mod_rlam, llam=vp.llam)
     return verb_base_rlam(vp, other)
   return verb_rlam
 
