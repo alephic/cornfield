@@ -137,8 +137,10 @@ add_tok(FeatToken('whom', {CAT: DP, CASE: ACC, COUNT: ANY, PERSON: THIRD, REL: R
 whose_tok = Determiner('whose', ANY)
 whose_tok.feats[REL] = REL_EXT
 add_tok(whose_tok)
-add_tok(ComplementizerMod('when', {CAT: VP}, {CAT: VP, FORM: [PRES, PRET, MODAL]}))
-add_tok(ComplementizerMod('if', {CAT: VP}, {CAT: VP, FORM: [PRES, PRET, MODAL]}))
+cond_arg_pat = {CAT: VP, FORM: [PRES, PRET, MODAL]}
+add_tok(ComplementizerMod('when', {CAT: VP}, cond_arg_pat))
+add_tok(ComplementizerMod('if', {CAT: VP}, cond_arg_pat))
+add_tok(ComplementizerMod('while', {CAT: VP}, cond_arg_pat))
 
 reason_rlam = get_basic_arg_rlam({CAT: CP, LEX: ['why', 'that']})
 add_tok(FeatToken('reason', {CAT: N, COUNT: SING}, rlam=reason_rlam))
