@@ -322,6 +322,15 @@ class Noun(FeatToken):
       fs = {CAT: N, COUNT: SING}
     super().__init__(lex, fs)
 
+class Pronoun(FeatToken):
+  def __init__(self, lex, count, case, person, rel=None, loc=None):
+    feats = {CAT: DP, COUNT: count, CASE: case, PERSON: person, PRO: True}
+    if rel:
+      feats[REL] = rel
+    if loc:
+      feats[LOC] = loc
+    super().__init__(lex, feats)
+
 def pos_adj_rlam(adj, other):
   if matches(N, other[CAT]):
     return ModL(other, adj)
@@ -329,6 +338,22 @@ def pos_adj_rlam(adj, other):
 class PosAdjective(FeatToken):
   def __init__(self, lex):
     super().__init__(lex, {CAT: Adj}, rlam=pos_adj_rlam)
+
+def cmp_adj_llam_only_mod(adj, other):
+  if matches(DP, other[CAT]) and not other[PRO]:
+    return ModR(other, adj)
+
+def cmp_adj_llam(adj, other):
+  if matches(DP, other[CAT]) and not other[PRO]:
+    return [ModR(other, adj), ArgL(adj, other, llam=cmp_adj_llam_only_mod)]
+
+def cmp_adj_rlam(adj, other):
+  if pat_matches({CAT: PP, LEX: 'than'}, other):
+    return ArgR(adj, other, llam=cmp_adj_llam)
+
+class CmpAdjective(FeatToken):
+  def __init__(self, lex):
+    super().__init__(lex, {CAT: Adj}, rlam=cmp_adj_rlam)
 
 def det_rlam(det, other):
   if pat_matches({CAT: N, COUNT: det[COUNT]}, other):
