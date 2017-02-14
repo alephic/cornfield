@@ -26,12 +26,8 @@ class World:
   def __init__(self, facts):
     self.facts = facts
 
-class Qualifier:
-  pass
-class PronounQual(Qualifier):
-  pass
-class PropertyQual(Qualifier):
-  pass
+CARD = object()
+DEF = object()
 class Referent:
   def __init__(self, qualifiers):
     self.qualifiers = qualifiers
