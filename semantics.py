@@ -1,3 +1,4 @@
+from util import DefaultDict
 
 class TreeNode:
   def __init__(self, word, tag, reln, children):
@@ -13,6 +14,7 @@ def deps2tree(deps):
       nodes[d].children.append(n)
   return nodes[0]
 
-class SemanticNode:
-  def __init__(self):
-    pass
+class SemanticAction:
+  def __init__(self, feats=None):
+    self.feats = feats if feats else DefaultDict(None)
+  
