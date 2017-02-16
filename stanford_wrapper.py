@@ -16,6 +16,10 @@ parser = DependencyParser.loadFromModelFile('edu/stanford/nlp/models/parser/nnde
 
 StringReader = autoclass('java.io.StringReader')
 
+class DepList(list):
+  def __repr__(self):
+    return '\n'.join(map(lambda t: str(t[0])+': '+', '.join(map(repr, t[1])), zip(range(len(self)), self)))
+
 def parse(text):
   tokenized = MaxentTagger.tokenizeText(StringReader(text))
   it = tokenized.iterator()
@@ -23,7 +27,8 @@ def parse(text):
   while it.hasNext():
     tokenized_sent = it.next()
     tagged_sent = tagger.tagSentence(tokenized_sent)
-    words = [('ROOT', 'ROOT', -1, None)]
+    words = DepList()
+    words.append(('ROOT', 'ROOT', -1, None))
     tg_it = tagged_sent.iterator()
     while tg_it.hasNext():
       tg = tg_it.next()
@@ -37,4 +42,3 @@ def parse(text):
       words[td.dep().index()] = (wt[0], wt[1], td.gov().index(), td.reln().getShortName())
     parsed.append(words)
   return parsed
-
