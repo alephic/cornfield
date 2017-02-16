@@ -8,10 +8,10 @@ from jnius import autoclass
 
 DependencyParser = autoclass('edu.stanford.nlp.parser.nndep.DependencyParser')
 MaxentTagger = autoclass('edu.stanford.nlp.tagger.maxent.MaxentTagger')
-print 'Loading tagger...'
+print('Loading tagger...')
 tagger = MaxentTagger('edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger')
 
-print 'Loading parser...'
+print('Loading parser...')
 parser = DependencyParser.loadFromModelFile('edu/stanford/nlp/models/parser/nndep/english_UD.gz')
 
 StringReader = autoclass('java.io.StringReader')
