@@ -16,6 +16,8 @@ parser = DependencyParser.loadFromModelFile('edu/stanford/nlp/models/parser/nnde
 
 StringReader = autoclass('java.io.StringReader')
 
+Morphology = autoclass('edu.stanford.nlp.process.Morphology')
+
 class DepList(list):
   def __repr__(self):
     return '\n'.join(map(lambda t: str(t[0])+': '+', '.join(map(repr, t[1])), zip(range(len(self)), self)))
@@ -39,6 +41,7 @@ def parse(text):
     while td_it.hasNext():
       td = td_it.next()
       wt = words[td.dep().index()]
-      words[td.dep().index()] = (wt[0], wt[1], td.gov().index(), td.reln().getShortName())
+      stem = Morphology.stemStatic(wt[0], wt[1]).word()
+      words[td.dep().index()] = (wt[0], stem, wt[1], td.gov().index(), td.reln().getShortName())
     parsed.append(words)
   return parsed
