@@ -23,14 +23,18 @@ def parse(text):
   while it.hasNext():
     tokenized_sent = it.next()
     tagged_sent = tagger.tagSentence(tokenized_sent)
+    words = [('ROOT', 'ROOT', -1, None)]
+    tg_it = tagged_sent.iterator()
+    while tg_it.hasNext():
+      tg = tg_it.next()
+      words.append((tg.word(), tg.tag()))
     gs = parser.predict(tagged_sent)
     td_it = gs.typedDependencies().iterator()
     deps = []
     while td_it.hasNext():
       td = td_it.next()
-      deps.append(
-        ((td.gov().word(), td.gov().index()), td.reln().getShortName(), (td.dep().word(), td.dep().index()))
-      )
-    parsed.append(deps)
+      wt = words[td.dep().index()]
+      words[td.dep().index()] = (wt[0], wt[1], td.gov().index(), td.reln().getShortName())
+    parsed.append(words)
   return parsed
 
