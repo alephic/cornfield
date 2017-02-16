@@ -1,4 +1,5 @@
 __pycache__/
-stanford-parser-full-2016-10-31/
+stanford-parser-full-*/
+*.pyc
 *.swp
 .DS_Store
