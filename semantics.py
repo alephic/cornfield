@@ -49,7 +49,5 @@ HABIT = object() # used to, (VBZ),
 DEF = object() # Definite (boolean)
 NOUNS = object() # Nominal qualifiers (list)
 ADJS = object() # Adjectival qualifiers (list)
-# Complement
-CASE = object()
-# Values:
-OF = object()
+COMP = object() # Complement
+CASE = object() # Complement relation
