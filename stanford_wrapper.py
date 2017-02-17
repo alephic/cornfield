@@ -30,7 +30,7 @@ def parse(text):
     tokenized_sent = it.next()
     tagged_sent = tagger.tagSentence(tokenized_sent)
     words = DepList()
-    words.append(('ROOT', 'ROOT', -1, None))
+    words.append(('ROOT', 'ROOT', 'ROOT', -1, None))
     tg_it = tagged_sent.iterator()
     while tg_it.hasNext():
       tg = tg_it.next()
