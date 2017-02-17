@@ -1,4 +1,6 @@
 
+from collections import deque
+
 class TreeNode:
   def __init__(self, word, stem, tag, reln, parent, children):
     self.word = word
@@ -30,3 +32,24 @@ def tree_collect(tree, cond):
   for child in tree.children.values():
     for node in tree_collect(child, cond):
       yield node
+
+def collect_ref_nodes(tree):
+  nominal_relns = ['nmod','nmod:poss','dobj','iobj','nsubj']
+  nominal_tags = ['DT','PRP$','PRP','NN','NNP','NNS']
+  return tree_collect(tree,
+    lambda n: n.reln in nominal_relns or (n.reln == 'root' and n.tag in nominal_tags))
+
+class World:
+  def __init__(self, referents, relations):
+    self.referents = referents
+    self.relations = relations
+    self.mentions = deque()
+  def process(stmt):
+    for ref_node in collect_ref_nodes(stmt):
+      ref = self.get_ref_for(ref_node)
+  def get_ref_for(node):
+    # Indefinites become templates
+    # Definites become templates restricted to existing referents
+    # Pronouns are dereferenced to their last-mention buddy
+    # nmods, acl:relcls and adjectives are exploded
+    return None
