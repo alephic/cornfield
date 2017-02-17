@@ -7,6 +7,8 @@ class TreeNode:
     self.reln = reln
     self.parent = parent
     self.children = children
+  def __repr__(self):
+    return '<'+self.word+':'+self.tag+'>'
 
 def deps2tree(deps):
   nodes = list(map(lambda e: TreeNode(e[0], e[1], e[2], e[4], None, {}), deps))
@@ -22,5 +24,15 @@ def deps2tree(deps):
         nodes[d].children[r] = n
   return nodes[0]
 
-def directly_implies(tree1, tree2):
-  pass
+def tree_collect(tree, cond):
+  if cond(tree):
+    yield tree
+  for child in tree.children.values():
+    for node in tree_collect(child, cond):
+      yield node
+
+def gather_relations(tree):
+  n_rels = ['nsubj', 'dobj', 'nmod', 'nmod:poss']
+  n_tags = ['NN','NNP','NNS','PRP','PRP$']
+  n_nodes = tree_collect(tree, lambda node: node.reln in n_rels or node.tag in n_tags)
+  return list(n_nodes)
