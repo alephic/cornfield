@@ -30,9 +30,3 @@ def tree_collect(tree, cond):
   for child in tree.children.values():
     for node in tree_collect(child, cond):
       yield node
-
-def gather_relations(tree):
-  n_rels = ['nsubj', 'dobj', 'nmod', 'nmod:poss']
-  n_tags = ['NN','NNP','NNS','PRP','PRP$']
-  n_nodes = tree_collect(tree, lambda node: node.reln in n_rels or node.tag in n_tags)
-  return list(n_nodes)
