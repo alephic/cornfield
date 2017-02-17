@@ -16,38 +16,3 @@ def deps2tree(deps):
       n.parent = nodes[d]
       nodes[d].children.append(n)
   return nodes[0]
-
-# Semantic features
-# Of predicates:
-DEFAULT = object()
-
-# Lexical value
-LEX = object()
-
-# Time
-TIME = object()
-# Values:
-PRES = object() # Present
-PAST = object() # Past
-FUT = object() # Future
-
-# Aspect
-ASPECT = object()
-# Values:
-CONT = object() # Continuing
-
-# Mode
-MODE = object()
-# Values:
-NECESS = object() # must, have to, need to
-DEMAND = object() # should
-HYPOTH = object() # could, might
-CAPABL = object() # can <VB>, be able to <VB>, be capable of <VBG>
-HABIT = object() # used to, (VBZ), 
-
-# Of referents:
-DEF = object() # Definite (boolean)
-NOUNS = object() # Nominal qualifiers (list)
-ADJS = object() # Adjectival qualifiers (list)
-COMP = object() # Complement
-CASE = object() # Complement relation
