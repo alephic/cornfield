@@ -10,8 +10,15 @@ class TreeNode:
     self.reln = reln
     self.parent = parent
     self.children = children
+    self.ref = None
   def __repr__(self):
     return '<'+self.word+':'+self.tag+'>'
+  def collect(self, cond):
+    if cond(self):
+      yield self
+    for child in self.children.values():
+      for node in child.collect(cond):
+        yield node
 
 def deps2tree(deps):
   nodes = list(map(lambda e: TreeNode(e[0], e[1], e[2], e[4], None, {}), deps))
@@ -27,59 +34,58 @@ def deps2tree(deps):
         nodes[d].children[r] = n
   return nodes[0]
 
-def tree_collect(tree, cond):
-  if cond(tree):
-    yield tree
-  for child in tree.children.values():
-    for node in tree_collect(child, cond):
-      yield node
-
 def collect_ref_nodes(tree):
   nominal_relns = ['nmod','nmod:poss','dobj','iobj','nsubj']
   nominal_tags = ['DT','PRP$','PRP','NN','NNP','NNS']
-  return tree_collect(tree,
-    lambda n: n.reln in nominal_relns or (n.reln == 'root' and n.tag in nominal_tags))
+  return tree.collect(lambda n: n.reln in nominal_relns or (n.reln == 'root' and n.tag in nominal_tags))
 
-ANY = object()
-
-def matches(x1, x2):
-  if x1 == ANY or x2 == ANY:
-    return True
-  else return x1 == x2
-
-class InterlocRef:
-  intrn = {}
+class SpeakerRef:
+  _intern = {}
   def __init__(self, pers, plur):
     self.pers = pers
     self.plur = plur
   def __eq__(self, other):
-    return isinstance(other, InterlocRef) and matches(other.pers, self.pers) and matches(other.plur, self.plur)
+    return isinstance(other, SpeakerRef) and self.pers == other.pers and self.plur == other.plur
   def __hash__(self, other):
-    return hash(InterlocRef) ^ hash(self.pers) ^ hash(self.plur)
-def get_interloc_ref(pers, plur=False):
-  if (pers, plur) in InterlocRef.intrn:
-    return InterlocRef.intrn[(pers, plur)]
+    return hash(SpeakerRef) ^ hash(self.pers) ^ hash(self.plur)
+def get_speaker_ref(pers, plur):
+  if (pers, plur) in SpeakerRef._intern:
+    return SpeakerRef._intern[(pers, plur)]
   else:
-    ref = InterlocRef(pers, plur)
-    InterlocRef.intrn[(pers, plur)] = ref
+    ref = SpeakerRef(pers, plur)
+    SpeakerRef._intern[(pers, plur)] = ref
     return ref
 
 class FixedRef:
-  intrn = {}
+  _intern = {}
   def __init__(self, lex):
     self.lex = lex
 def get_fixed_ref(lex):
-  if lex in FixedRef.intrn:
-    return FixedRef.intrn[lex]
+  if lex in FixedRef._intern:
+    return FixedRef._intern[lex]
   else:
     ref = FixedRef(lex)
-    FixedRef.intrn[lex] = ref
+    FixedRef._intern[lex] = ref
     return ref
 
 class QualRef:
   def __init__(self, deft, quals):
     self.deft = deft
     self.quals = quals
+  def has_feat(self, feat):
+    for qual in self.quals:
+      if isinstance(qual, FeatQual):
+        if qual.feat == feat:
+          return True
+  def specify_feat_quals(self, feats):
+    d = feat_dict(feats)
+    for qual in self.quals:
+      if isinstance(qual, FeatQual) and isinstance(qual.feat, AnyFeatVal) and qual.feat.feature in d:
+        qual.feat = d[qual.feat.feature]
+
+class FeatQual:
+  def __init__(self, feat):
+    self.feat = feat
 
 MAX_MENTION_HISTORY = 100
 
@@ -90,45 +96,65 @@ class World:
     self.mentions = deque(maxlen=MAX_MENTION_HISTORY)
   def process(stmt, speaker_id):
     for ref_node in collect_ref_nodes(stmt):
-      ref = self.get_ref_for(ref_node)
+      ref = self.get_ref(ref_node)
       if isinstance(ref, QualRef):
         self.mentions.appendleft(ref)
-  def get_pronoun_ref(self, anim=True,)
-  def get_ref_for(node):
+  def get_pronoun_ref(self, *feats):
+    for mention in self.mentions:
+      matches = True
+      for feat in feats:
+        if not mention.has_feat(feat):
+          matches = False
+          break
+      if matches:
+        mention.specify_feat_quals(feats)
+        return mention
+  def get_ref(node):
+    if node.ref == None:
+      ref = self.gen_ref(node)
+      node.ref = ref
+    return node.ref
+  def gen_ref(node):
     if node.tag == 'PRP':
       if node.stem in ('I', 'me', 'myself'):
-        return get_interloc_ref(1)
-      if node.stem in ('we', 'us', 'ourselves'):
-        return get_interloc_ref(1, plur=True)
-      if node.stem == 'you':
-        return get_interloc_ref(2, plur=ANY)
-      if node.stem == 'yourself':
-        return get_interloc_ref(2)
-      if node.stem == 'yourselves':
-        return get_interloc_ref(2, plur=True)
-      if node.stem in ('it', 'itself'):
-        return self.get_pronoun_ref(anim=False)
-      if node.stem in ('they', 'them', 'themselves'):
-        return self.get_pronoun_ref(plur=True)
-      if node.stem in ('he', 'him'):
-        return self.get_pronoun_ref(anim=True, gender=MALE, )
-    if node.tag == 'DT':
+        return get_speaker_ref(FIRST, SING)
+      elif node.stem in ('we', 'us', 'ourselves'):
+        return get_speaker_ref(FIRST, PLUR)
+      elif node.stem == 'you':
+        return get_speaker_ref(SECOND, feat_any(PLURALITY))
+      elif node.stem == 'yourself':
+        return get_speaker_ref(SECOND, SING)
+      elif node.stem == 'yourselves':
+        return get_speaker_ref(SECOND, PLUR)
+      elif node.stem in ('it', 'itself'):
+        return self.get_pronoun_ref(INANIM, SING)
+      elif node.stem in ('they', 'them', 'themselves'):
+        return self.get_pronoun_ref(PLUR)
+      elif node.stem in ('he', 'him'):
+        return self.get_pronoun_ref(ANIM, MALE)
+    elif node.tag == 'DT':
       if node.stem in ('that', 'this'):
-        return self.get_pronoun_ref(anim=False)
-      if node.stem in ('those', 'these'):
-        return self.get_pronoun_ref(anim=False, plur=True)
-    if (node.tag == 'NN' and 'det' not in node.children) or node.tag == 'NNP':
+        return self.get_pronoun_ref(INANIM)
+      elif node.stem in ('those', 'these'):
+        return self.get_pronoun_ref(INANIM, PLUR)
+    elif (node.tag == 'NN' and 'det' not in node.children) or node.tag == 'NNP':
       return FixedRef(node.stem)
-    if node.tag == 'NN':
-      d = node.children['det']
-      if d.stem in ('a','some','any','every'):
-        deft = INDEF
-      ref = QualRef()
+    elif node.tag == 'NN':
+      deft = INDEF if node.children['det'].stem in ('a','some','any','every') else DEF
+      ref = QualRef(deft, [FeatQual(feat_any(GENDER)), FeatQual(feat_any(ANIMACY))])
       if 'compound' in node.children:
         for c in node.children['compound']:
-
-    # Indefinites become templates
-    # Definites become templates restricted to existing referents
-    # Pronouns are dereferenced to their last-mention buddy
-    # nmods, acl:relcls and adjectives are exploded
-    return None
+          ref.quals.append(CompoundQual(c))
+      if 'amod' in node.children:
+        for c in node.children['amod']:
+          ref.quals.append(AdjectiveQual(c))
+      if 'nmod' in node.children:
+        for c in node.children['nmod']:
+          ref.quals.append(self.get_nmod_qual(c))
+      if 'nmod:poss' in node.children:
+        ref.quals.append(self.get_poss_qual(node.children['nmod:poss']))
+      if 'acl:relcl' in node.children:
+        ref.quals.append(self.get_relcl_qual(node.children['acl:relcl']))
+      if 'acl' in node.children:
+        ref.quals.append(self.get_acl_qual(node.children['acl']))
+      return ref
