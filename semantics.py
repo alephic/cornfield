@@ -35,7 +35,7 @@ def deps2tree(deps):
   return nodes[0]
 
 def collect_ref_nodes(tree):
-  nominal_relns = ['nmod','nmod:poss','dobj','iobj','nsubj']
+  nominal_relns = ['nmod','nmod:poss','dobj','iobj','nsubj','nsubjpass']
   nominal_tags = ['DT','PRP$','PRP','NN','NNP','NNS']
   return tree.collect(lambda n: n.reln in nominal_relns or (n.reln == 'root' and n.tag in nominal_tags))
 
@@ -99,7 +99,7 @@ class World:
       ref = self.get_ref(ref_node)
       if isinstance(ref, QualRef):
         self.mentions.appendleft(ref)
-  def get_pronoun_ref(self, *feats):
+  def get_mention(self, *feats):
     for mention in self.mentions:
       matches = True
       for feat in feats:
@@ -116,32 +116,30 @@ class World:
     return node.ref
   def gen_ref(node):
     if node.tag == 'PRP':
-      if node.stem in ('I', 'me', 'myself'):
-        return get_speaker_ref(FIRST, SING)
-      elif node.stem in ('we', 'us', 'ourselves'):
-        return get_speaker_ref(FIRST, PLUR)
-      elif node.stem == 'you':
-        return get_speaker_ref(SECOND, feat_any(PLURALITY))
-      elif node.stem == 'yourself':
-        return get_speaker_ref(SECOND, SING)
-      elif node.stem == 'yourselves':
-        return get_speaker_ref(SECOND, PLUR)
+      if pronoun_person[node.stem] in (FIRST, SECOND):
+        return SpeakerRef(pronoun_person[node.stem], pronoun_plur[node.stem])
       elif node.stem in ('it', 'itself'):
-        return self.get_pronoun_ref(INANIM, SING)
-      elif node.stem in ('they', 'them', 'themselves'):
-        return self.get_pronoun_ref(PLUR)
-      elif node.stem in ('he', 'him'):
-        return self.get_pronoun_ref(ANIM, MALE)
+        return self.get_mention(INANIM, SING)
+      elif node.stem in ('they', 'themselves'):
+        return self.get_mention(PLUR)
+      elif node.stem in ('he', 'himself'):
+        return self.get_mention(ANIM, MALE)
+      elif node.stem in ('she', 'herself'):
+        return self.get_mention(ANIM, FEMALE)
     elif node.tag == 'DT':
       if node.stem in ('that', 'this'):
-        return self.get_pronoun_ref(INANIM)
+        return self.get_mention(INANIM, SING)
       elif node.stem in ('those', 'these'):
-        return self.get_pronoun_ref(INANIM, PLUR)
+        return self.get_mention(INANIM, PLUR)
     elif (node.tag == 'NN' and 'det' not in node.children) or node.tag == 'NNP':
-      return FixedRef(node.stem)
-    elif node.tag == 'NN':
-      deft = INDEF if node.children['det'].stem in ('a','some','any','every') else DEF
-      ref = QualRef(deft, [FeatQual(feat_any(GENDER)), FeatQual(feat_any(ANIMACY))])
+      return FixedRef(node.stem, [FeatQual(feat_any(GENDER)), FeatQual(feat_any(ANIMACY))])
+    elif node.tag in ('NN', 'NNS'):
+      if 'det' in node.children:
+        deft = INDEF if node.children['det'].stem in ('a','all','every','any','some') else DEF
+      else:
+        deft = INDEF
+      plur = PLUR if node.tag == 'NNS' else SING
+      ref = QualRef(deft, [FeatQual(feat_any(GENDER)), FeatQual(feat_any(ANIMACY)), FeatQual(plur)])
       if 'compound' in node.children:
         for c in node.children['compound']:
           ref.quals.append(CompoundQual(c))
@@ -158,3 +156,5 @@ class World:
       if 'acl' in node.children:
         ref.quals.append(self.get_acl_qual(node.children['acl']))
       return ref
+    elif node.tag == 'PRP$':
+      return QualRef(DEF, [PossQual()])
