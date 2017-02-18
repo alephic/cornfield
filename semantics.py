@@ -75,6 +75,10 @@ def get_fixed_ref(lex):
     FixedRef.intrn[lex] = ref
     return ref
 
+class IndefRef:
+  def __init__(self, rel_stmts):
+    self.rel_stmts = rel_stmts
+
 class World:
   def __init__(self, referents, relations):
     self.referents = referents
