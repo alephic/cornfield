@@ -1,5 +1,6 @@
 
 from collections import deque
+from features import *
 
 class TreeNode:
   def __init__(self, word, stem, tag, reln, parent, children):
@@ -76,20 +77,23 @@ def get_fixed_ref(lex):
     return ref
 
 class QualRef:
-  def __init__(self, deft, rel_stmts):
+  def __init__(self, deft, quals):
     self.deft = deft
-    self.rel_stmts = rel_stmts
+    self.quals = quals
+
+MAX_MENTION_HISTORY = 100
 
 class World:
   def __init__(self, referents, relations):
     self.referents = referents
     self.relations = relations
-    self.mentions = deque()
+    self.mentions = deque(maxlen=MAX_MENTION_HISTORY)
   def process(stmt, speaker_id):
     for ref_node in collect_ref_nodes(stmt):
       ref = self.get_ref_for(ref_node)
       if isinstance(ref, QualRef):
         self.mentions.appendleft(ref)
+  def get_pronoun_ref(self, anim=True,)
   def get_ref_for(node):
     if node.tag == 'PRP':
       if node.stem in ('I', 'me', 'myself'):
@@ -105,7 +109,9 @@ class World:
       if node.stem in ('it', 'itself'):
         return self.get_pronoun_ref(anim=False)
       if node.stem in ('they', 'them', 'themselves'):
-        return self.get_pronoun_ref(anim=ANY, plur=True)
+        return self.get_pronoun_ref(plur=True)
+      if node.stem in ('he', 'him'):
+        return self.get_pronoun_ref(anim=True, gender=MALE, )
     if node.tag == 'DT':
       if node.stem in ('that', 'this'):
         return self.get_pronoun_ref(anim=False)
@@ -114,7 +120,13 @@ class World:
     if (node.tag == 'NN' and 'det' not in node.children) or node.tag == 'NNP':
       return FixedRef(node.stem)
     if node.tag == 'NN':
-      pass
+      d = node.children['det']
+      if d.stem in ('a','some','any','every'):
+        deft = INDEF
+      ref = QualRef()
+      if 'compound' in node.children:
+        for c in node.children['compound']:
+
     # Indefinites become templates
     # Definites become templates restricted to existing referents
     # Pronouns are dereferenced to their last-mention buddy
