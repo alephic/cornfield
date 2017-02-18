@@ -75,8 +75,9 @@ def get_fixed_ref(lex):
     FixedRef.intrn[lex] = ref
     return ref
 
-class IndefRef:
-  def __init__(self, rel_stmts):
+class QualRef:
+  def __init__(self, deft, rel_stmts):
+    self.deft = deft
     self.rel_stmts = rel_stmts
 
 class World:
@@ -87,7 +88,8 @@ class World:
   def process(stmt, speaker_id):
     for ref_node in collect_ref_nodes(stmt):
       ref = self.get_ref_for(ref_node)
-      self.mentions.appendleft(ref)
+      if isinstance(ref, QualRef):
+        self.mentions.appendleft(ref)
   def get_ref_for(node):
     if node.tag == 'PRP':
       if node.stem in ('I', 'me', 'myself'):
