@@ -19,6 +19,15 @@ class TreeNode:
     for child in self.children.values():
       for node in child.collect(cond):
         yield node
+  def __iter__(self):
+    yield self
+  def __getitem__(self, item):
+    if item == 0:
+      return self
+    else:
+      raise ValueError()
+  def __len__(self):
+    return 1
 
 def deps2tree(deps):
   nodes = list(map(lambda e: TreeNode(e[0], e[1], e[2], e[4], None, {}), deps))
@@ -148,4 +157,7 @@ class World:
         ref.preds.append(self.get_acl_pred(node.children['acl']))
       return ref
   def get_adj_pred(self, node):
-    pass
+    if node.tag == 'JJR' and 'ccomp' in node.children:
+      ccomp = node.children['ccomp']
+      if ccomp.children['case'].stem == 'than':
+        pass
