@@ -1,7 +1,7 @@
 
 class FeatVal:
-  def __init__(self, feature):
-    self.feature = feature
+  def __init__(self, key):
+    self.key = key
   def __eq__(self, other):
     return isinstance(other, AnyFeatVal) or other == self
 
@@ -10,16 +10,16 @@ class AnyFeatVal(FeatVal):
   def __eq__(self, other):
     return isinstance(other, FeatVal)
 
-def feat_any(feat):
-  if feat in AnyFeatVal._intern:
-    return AnyFeatVal._intern[feat]
+def feat_any(key):
+  if key in AnyFeatVal._intern:
+    return AnyFeatVal._intern[key]
   else:
-    new_any = AnyFeatVal(feat)
-    AnyFeatVal._intern[feat] = new_any
+    new_any = AnyFeatVal(key)
+    AnyFeatVal._intern[key] = new_any
     return new_any
 
 def feat_dict(feats):
-  return dict(map(lambda feat: (feat.feature, feat), feats))
+  return dict(map(lambda feat: (feat.key, feat), feats))
 
 DEFT = object() # Definite/indefinite
 DEF = FeatVal(DEFT)
@@ -98,4 +98,36 @@ pronoun_plur = {
   'it': SING,
   'its': SING,
   'itself': SING
+}
+
+pronoun_gender = {
+  'he': MALE,
+  'his': MALE,
+  'himself': MALE,
+  'she': FEMALE,
+  'her': FEMALE,
+  'hers': FEMALE,
+  'herself': FEMALE,
+  'they': feat_any(GENDER),
+  'their': feat_any(GENDER),
+  'themselves': feat_any(GENDER),
+  'it': feat_any(GENDER),
+  'its': feat_any(GENDER),
+  'itself': feat_any(GENDER)
+}
+
+pronoun_anim = {
+  'he': ANIM,
+  'his': ANIM,
+  'himself': ANIM,
+  'she': ANIM,
+  'her': ANIM,
+  'hers': ANIM,
+  'herself': ANIM,
+  'they': feat_any(ANIM),
+  'their': feat_any(ANIM),
+  'themselves': feat_any(ANIM),
+  'it': INANIM,
+  'its': INANIM,
+  'itself': INANIM
 }
