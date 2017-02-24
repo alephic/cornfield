@@ -2,74 +2,21 @@
 from collections import deque
 from features import *
 
-class TreeNode:
-  def __init__(self, word, stem, tag, reln, parent, children):
-    self.word = word
-    self.stem = stem
-    self.tag = tag
-    self.reln = reln
-    self.parent = parent
-    self.children = children
-    self.ref = None
-  def __repr__(self):
-    return '<'+self.word+':'+self.tag+'>'
-  def collect(self, cond):
-    if cond(self):
-      yield self
-    for child in self.children.values():
-      for node in child.collect(cond):
-        yield node
-  def __iter__(self):
-    yield self
-  def __getitem__(self, item):
-    if item == 0:
-      return self
-    else:
-      raise ValueError()
-  def __len__(self):
-    return 1
+from trees import *
 
-def deps2tree(deps):
-  nodes = list(map(lambda e: TreeNode(e[0], e[1], e[2], e[4], None, {}), deps))
-  for ((w,s,t,d,r), n) in zip(deps, nodes):
-    if d != -1:
-      n.parent = nodes[d]
-      if r in nodes[d].children:
-        if isinstance(nodes[d].children[r], list):
-          nodes[d].children[r].append(n)
-        else:
-          nodes[d].children[r] = [nodes[d].children[r], n]
-      else:
-        nodes[d].children[r] = n
-  return nodes[0]
+class FeatPred:
+  def __init__(self, feat):
+    self.feat = feat
 
-def collect_ref_nodes(tree):
-  nominal_relns = ['nmod','nmod:poss','dobj','iobj','nsubj','nsubjpass']
-  nominal_tags = ['DT','PRP$','PRP','NN','NNP','NNS']
-  return tree.collect(lambda n: n.reln in nominal_relns or (n.reln == 'root' and n.tag in nominal_tags))
+class ClausePred:
+  def __init__(self, root):
+    self.root = root
 
 class SpeakerRef:
   def __init__(self, speaker_id):
     self.speaker_id = speaker_id
   def __eq__(self, other):
     return isinstance(other, SpeakerRef) and self.speaker_id == other.speaker_id
-
-class FeatPred:
-  def __init__(self, feat):
-    self.feat = feat
-
-class PossPred:
-  def __init__(self, possessor):
-    self.possessor = possessor
-
-class PredRef:
-  def __init__(self, preds):
-    self.preds = preds
-  def has_feat(self, feat):
-    for pred in self.preds:
-      if isinstance(pred, FeatPred):
-        if pred.feat == feat:
-          return True
 
 class FixedRef(PredRef):
   def __init__(self, lex, preds):
@@ -81,7 +28,12 @@ class DetRef(PredRef):
     super().__init__(preds)
     self.deft = deft
 
+class MultiRef:
+  def __init__(self, refs):
+    self.refs = refs
+
 MAX_MENTION_HISTORY = 100
+MAX_AMBIG_MENTIONS = 10
 
 class World:
   def __init__(self, referents, relations):
@@ -96,8 +48,6 @@ class World:
       ref = self.get_ref(ref_node)
       if isinstance(ref, PredRef):
         self.mentions.appendleft(ref)
-      if ref not in self.referents:
-        self.referents.add(ref)
   def get_pronoun_ref(self, node):
     if pronoun_person[node.stem] == FIRST:
       return self.speaker
@@ -106,6 +56,7 @@ class World:
     else:
       return self.get_mention(pronoun_plur[node.stem], pronoun_anim[node.stem], pronoun_gender[node.stem])
   def get_mention(self, *feats):
+    matching = []
     for mention in self.mentions:
       matches = True
       for feat in feats:
@@ -115,10 +66,19 @@ class World:
           matches = False
           break
       if matches:
-        return mention
+        matching.append(mention)
+        if len(matching) == MAX_AMBIG_MENTIONS:
+          return MultiRef(matching)
+    if len(matching) == 1:
+      return matching[0]
+    elif len(matching) > 1:
+      return MultiRef(matching)
+    else:
+      return FixedRef('?', [FeatPred(f) for f in feats])
   def get_ref(self, node):
     if node.ref == None:
       ref = self.gen_ref(node)
+      self.referents.add(ref)
       node.ref = ref
     return node.ref
   def gen_ref(self, node):
@@ -140,24 +100,6 @@ class World:
         deft = INDEF
       plur = PLUR if node.tag == 'NNS' else SING
       ref = PredRef(deft, [FeatPred(feat_any(GENDER)), FeatPred(feat_any(ANIMACY)), FeatPred(plur)])
-      if 'compound' in node.children:
-        for c in node.children['compound']:
-          ref.preds.append(CompoundPred(c))
-      if 'amod' in node.children:
-        for c in node.children['amod']:
-          ref.preds.append(self.get_adj_pred(c))
-      if 'nmod' in node.children:
-        for c in node.children['nmod']:
-          ref.preds.append(self.get_nmod_pred(c))
-      if 'nmod:poss' in node.children:
-        ref.preds.append(self.get_poss_pred(node.children['nmod:poss']))
-      if 'acl:relcl' in node.children:
-        ref.preds.append(self.get_relcl_pred(node.children['acl:relcl']))
-      if 'acl' in node.children:
-        ref.preds.append(self.get_acl_pred(node.children['acl']))
+      # Add copular ClausePreds for n/adj adjuncts
+      # Add ClausePreds for relcls
       return ref
-  def get_adj_pred(self, node):
-    if node.tag == 'JJR' and 'ccomp' in node.children:
-      ccomp = node.children['ccomp']
-      if ccomp.children['case'].stem == 'than':
-        pass
