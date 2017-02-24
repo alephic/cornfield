@@ -100,6 +100,11 @@ class World:
         deft = INDEF
       plur = PLUR if node.tag == 'NNS' else SING
       ref = PredRef(deft, [FeatPred(feat_any(GENDER)), FeatPred(feat_any(ANIMACY)), FeatPred(plur)])
-      # Add copular ClausePreds for n/adj adjuncts
-      # Add ClausePreds for relcls
+      for adj_reln in ['nmod', 'nmod:poss', 'acl', 'amod']:
+        if adj_reln in node.children:
+          for adjunct in node.children[adj_reln]:
+            ref.preds.append(ClausePred(gen.copula(node, adjunct.deepcopy())))
+      if 'acl:relcl' in node.children:
+        for relcl in node.children['acl:relcl']:
+          ref.preds.append(ClausePred(gen.derel(node, relcl)))
       return ref
