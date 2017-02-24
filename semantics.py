@@ -36,7 +36,7 @@ MAX_MENTION_HISTORY = 100
 MAX_AMBIG_MENTIONS = 10
 
 class World:
-  def __init__(self, referents, relations):
+  def __init__(self, referents):
     self.referents = referents
     self.mentions = deque(maxlen=MAX_MENTION_HISTORY)
     self.speaker = None
