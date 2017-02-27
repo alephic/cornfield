@@ -85,7 +85,8 @@ class World:
     if node.tag == 'PRP':
       return self.get_pronoun_ref(node)
     elif node.tag == 'PRP$':
-      return PredRef(DEF, [PossPred(self.get_pronoun_ref(node))])
+      # TODO No such get_poss_pred implementation as of yet
+      return PredRef(DEF, [self.get_poss_pred(self.get_pronoun_ref(node))])
     elif node.tag == 'DT':
       if node.stem in ('that', 'this'):
         return self.get_mention(INANIM, SING)
@@ -103,8 +104,36 @@ class World:
       for adj_reln in ['nmod', 'nmod:poss', 'acl', 'amod']:
         if adj_reln in node.children:
           for adjunct in node.children[adj_reln]:
-            ref.preds.append(ClausePred(gen.copula(node, adjunct.deepcopy())))
+            ref.preds.append(self.adjunct2pred(node, adjunct))
       if 'acl:relcl' in node.children:
         for relcl in node.children['acl:relcl']:
-          ref.preds.append(ClausePred(gen.derel(node, relcl)))
+          ref.preds.append(self.relcl2pred(node, relcl))
       return ref
+  def adjunct2pred(self, subj_orig, adj_orig):
+    # Reroot tree
+    adj = adj_orig.deepcopy()
+    adj.parent = None
+    adj.reln = 'root'
+    # Graft subject
+    subj = subj_orig.deepcopy()
+    subj.parent = adj
+    subj.reln = 'nsubj'
+    adj.children['nsubj'] = subj
+    # Add copula
+    cop = TreeNode('be', 'be', 'VBZ', 'cop', adj, {})
+    adj.children['cop'] = cop
+    return ClausePred(adj)
+  def relcl2pred(self, subj_orig, relcl_orig):
+    relcl = relcl_orig.deepcopy()
+    relcl.parent = None
+    relcl.reln = 'root'
+    if 'dobj' not in relcl.children:
+      relcl.children['dobj'] = subj
+    elif 'nsubj' in relcl.children:
+      relsubj = relcl.children['nsubj']
+      if relsubj.tag in ('WP', 'WDT'):
+        relcl.children['nsubj'] = subj
+      elif 'nmod:poss' in relsubj.children and relsubj.children['nmod:poss'].tag == 'WP$':
+        # TODO Whose
+        pass
+      
