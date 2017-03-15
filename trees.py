@@ -1,13 +1,13 @@
 
 class TreeNode:
-  def __init__(self, word, stem, tag, reln, parent, children):
+  def __init__(self, word, stem, tag, reln, parent, children, ref_box=None):
     self.word = word
     self.stem = stem
     self.tag = tag
     self.reln = reln
     self.parent = parent
     self.children = children
-    self.ref = None
+    self.ref_box = None
   def __repr__(self):
     return '<'+self.word+':'+self.tag+'>'
   def collect(self, cond):
@@ -34,7 +34,7 @@ class TreeNode:
   def __len__(self):
     return 1
   def deepcopy(self):
-    copy = TreeNode(self.word, self.stem, self.tag, self.reln, self.parent, dict())
+    copy = TreeNode(self.word, self.stem, self.tag, self.reln, self.parent, dict(), ref_box=self.ref_box)
     for child in self.children.values():
       copy.add_child(child.deepcopy())
 
