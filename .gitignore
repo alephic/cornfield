@@ -1,5 +1,5 @@
 __pycache__/
-stanford-parser-full-*/
+dependencies/stanford-parser-full-*/
 *.pyc
 *.swp
 .DS_Store
