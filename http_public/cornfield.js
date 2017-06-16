@@ -21,6 +21,10 @@ window.addEventListener('load', function(e) {
       if (e.key == 'Enter') {
         submit();
       }
+    } else if (e.code) {
+      if (e.code == 'Enter') {
+        submit();
+      }
     } else if (e.which) {
       if (e.which == 13) {
         submit();
