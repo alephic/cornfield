@@ -4,7 +4,10 @@
 window.addEventListener('load', function(e) {
   var ws = new WebSocket('ws://'+window.location.hostname+':8765/');
   ws.addEventListener('open', function(e) {
-    //ws.send("foo");
+    console.log('Connected!');
+  });
+  ws.addEventListener('error', function(e) {
+    console.log(e);
   });
   ws.addEventListener('message', function(e) {
     var logEntry = document.createElement('div');
