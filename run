@@ -1,8 +1,8 @@
 #!/bin/bash
 
-./http_serv.py &
+python3 -m http_serv &
 HTTP_SERV_PID=$!
-./ws_serv.py &
+python3 -m ws_serv &
 WS_SERV_PID=$!
 trap 'kill $HTTP_SERV_PID $WS_SERV_PID' EXIT
 wait
